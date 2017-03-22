@@ -1,0 +1,56 @@
+.annotated_media { 
+  
+  // Fix certain CSS overrides which we do not want
+  * { line-height: initial; }
+  img { user-select: none; }
+
+  background-color:#d2d3d5; 
+
+  // RESPONSIVE!
+  padding: 2rem;
+  @media (max-width:400px) { padding: 1rem; }
+  
+  h1 {
+    font-family: 'Proxima Nova', Helvetica, sans-serif;
+    font-weight: 800;
+    margin: 0 !important;
+  }
+  
+  h2 {
+    font-family:'Proxima Nova', Helvetica, sans-serif;
+    font-weight: 400 !important;
+    margin: 0;
+    margin-bottom: 0.5em !important;
+  }
+  
+  .circle { 
+    cursor: pointer;  
+    position: absolute; 
+    border-radius:50%; 
+  }
+  
+  .under-line { 
+    position: absolute; 
+  }
+  
+  .under-text { 
+    position: relative; 
+  }
+  
+  .overlay-under { 
+    padding-top:1em; 
+  }
+  
+  .overlay-container { 
+    position:relative; 
+  }
+  
+  .under-text * { 
+    margin-bottom: 0px !important; 
+    font-family:'Proxima Nova', Helvetica, sans-serif; 
+    color:inherit !important;
+    font-size: 1em !important;
+    line-height: normal !important;
+  }
+
+}

@@ -1,0 +1,307 @@
+<!doctype html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title></title>
+      <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.1.1/mustache.min.js"></script>
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script> 
+      <script src="builder-config.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.js"></script>
+  </head>
+  <body>
+
+    <style>
+      body * {
+        font-family: 'Proxima Nova', Gotham, Helvetica, Arial, sans-serif;
+      }
+      .sp-replacer {
+        display:block;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 6px;
+        padding-left: 10px;
+      }
+      .sp-container {
+        background-color: #fff;
+      }
+      .sp-button-container {
+        display: none
+      }
+    </style>
+  
+    <div class="container">
+
+      <div class="row">
+        <div class="col-xs-12">
+          <h1>annotator builder</h1>
+        </div>
+      </div>
+
+      <div class="row" id="image-conf">
+        <div class="col-xs-12">
+          <p>Hello. Pop your image URL in this box to get started, or feel free to use our example image. It should start https://</p>
+          <p><input id="image-url" type="text" class="form-control" placeholder="Image URL" value="https://games.buzzfeed.com/_uk/annotator/img/calibration.png"/></p>
+          <p><button id="image-ready" style="display:none" class="btn btn-primary">I have put an image URL in the box</button></p>
+        </div>
+      </div>
+
+      <div class="row" id="image-preview" style="display:none">
+        <div class="col-xs-12">
+          <p><div id="live_preview"></div></p>
+          <p id="action-buttons">
+            <button id="new-annotation" class="btn btn-primary">Place an annotation</button>
+            <button id="generate-embed" class="btn btn-success">Finished; grab embed code</button>
+          </p>
+          <p><div id="readout" style="font-size:1.2em;font-weight:600"></div></p>
+        </div>
+      </div>
+
+      <div class="row" id="configure-row" style="display:none">
+        <div class="col-xs-3">
+          <div class="form-group">
+            <label for="x">X Co-ordinate, %</label>
+            <input type="text" class="form-control update-live" id="x" placeholder="50">
+          </div>
+        </div>
+        <div class="col-xs-3">
+          <div class="form-group">
+            <label for="y">Y Co-ordinate, %</label>
+            <input type="text" class="form-control update-live" id="y" placeholder="50">
+          </div>
+        </div>
+        <div class="col-xs-3">
+          <div class="form-group">
+            <label for="radius">Radius, %</label>
+            <input type="text" class="form-control update-live" id="radius" placeholder="5">
+          </div>
+        </div>
+        <div class="col-xs-3">
+          <div class="form-group">
+            <label for="color">color</label>
+            <input type="text" class="form-control update-live" id="color" placeholder="rgba(234, 19, 148, 0.7)">
+          </div>
+        </div>
+        <div class="col-xs-12">
+          <div class="form-group">
+            <label for="content">Content, HTML allowed</label>
+            <input type="text" class="form-control update-live" id="content" placeholder="None, just circle it">
+          </div>
+        </div>
+        <div class="col-xs-12">
+          <button id="commit-annotation" class="btn btn-primary">Finished with this annotation</button>
+        </div>
+      </div>
+
+      <div class="row" id="get-embed" style="display:none">
+        <div class="col-xs-12">
+          <h4>Your embed code</h4>
+          <textarea id="embed-code" onclick="this.select()" class="form-control" style="font-family:monospace;font-size:0.75em;height:150px;"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+
+      var tpl;
+      var e_tpl;
+
+      // Builder debug in callback
+      $.getScript(builderConfig.distURL, function() {
+        tpl = $('#preview-template').html();
+        Mustache.parse(tpl);
+        e_tpl = $('#full-embed-template').html();
+        Mustache.parse(e_tpl);
+        $("#image-ready").show();
+      });
+
+      var lastKnownColor = 'rgba(234, 19, 148, 0.7)';
+
+      // Prep color picker
+      $("#color").spectrum({
+        color: 'rgba(234, 19, 148, 0.7)',
+        showAlpha: true,
+        move: function(color) {
+          lastKnownColor = color.toRgbString();
+          $("#color").val(lastKnownColor);
+          $("#color").trigger("input");
+        }
+      });
+
+      var configuringLast = false;
+
+      function configureLastTarget() {
+        var last = targetConfig[targetConfig.length-1];
+        $("#configure-row").show();
+        $("#x").val(last.x);
+        $("#y").val(last.y);
+        $("#radius").val(last.radius);
+        $("#content").val(last.content);
+        // Enable listeners
+        configuringLast = true;
+      }
+
+      $(".update-live").on("input", function() {
+        if (configuringLast == true) {
+          var thing = $(this).attr("id");
+          var last = targetConfig[targetConfig.length-1];
+          last[thing] = $(this).val();
+          update_targets();
+        }
+      })
+
+      function random_chars() {
+        return 'xxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});
+      }
+
+      var targetConfig = [];
+
+      var h1current = "An annotated image";
+      var h2current = "Click or Tap to reveal annotations";
+
+      function update_preview() {
+        last_rc = "annotation-" + random_chars();
+        var data = {
+          "image": $("#image-url").val(),
+          "uniqueID": last_rc,
+          "h1": h1current,
+          "h2": h2current
+        }
+        var render = Mustache.render(tpl, data);
+        $('#live_preview').html(render);
+        window.annotate_media("#" + last_rc, {
+          targets: targetConfig
+        });
+      }
+
+      $("#commit-annotation").click(function() {
+        configuringLast = false;
+        $("#configure-row").hide();
+        $("#readout").html("");
+        $("#action-buttons").show();
+      })
+
+      $("#image-ready").click(function() {
+        $("#image-conf").hide();
+        $("#image-preview").show();
+        update_preview();
+      });
+
+      var last_rc = false;
+      var placing_annotation = false;
+      var sizing_annotation = false;
+      var placed_percentages = { x: 0, y: 0 };
+
+      $("#new-annotation").click(function() {
+        $("#action-buttons").hide();
+        $("#readout").text("Click the image in the centre of where you want the annotation to be.");
+        placing_annotation = true;
+      });
+
+      $("body").on("click", "#live_preview img", function(e) {
+        if (sizing_annotation == true) {
+          $("#readout").text("Great! Done. Let's get it looking nice...");
+          configureLastTarget();
+          sizing_annotation = false;
+        } else if (placing_annotation == true) {
+          var pos = getPercs(e);
+          placed_percentages.x = pos.x;
+          placed_percentages.y = pos.y;
+          targetConfig.push({
+            "color": lastKnownColor,
+            "radius": 0,
+            "x": placed_percentages.x,
+            "y": placed_percentages.y
+          });
+          update_targets();
+          $("#readout").text("Size it up from the minimum using your cursor, then click to confirm.");
+          placing_annotation = false;
+          sizing_annotation = true;
+        }
+      })
+
+      function getPercs(e) {
+        var iw = $("#live_preview img").innerWidth();
+        var ih = $("#live_preview img").innerHeight();
+        xPos = (e.offsetX/iw)*100;
+        xPos = xPos.toFixed(3);
+        yPos = (e.offsetY/ih)*100;
+        yPos = yPos.toFixed(3);
+        return { x: xPos, y: yPos }
+      }
+
+      $("body").on("mousemove", "#live_preview img", function(e) {
+        if (sizing_annotation) {
+          var pos = getPercs(e);
+          var diffX = pos.x - placed_percentages.x;
+          var diffY = pos.y - placed_percentages.y;
+          var diffMax = Math.max(diffX, diffY);
+          targetConfig[targetConfig.length-1].radius = diffMax.toFixed(3);
+          update_targets();
+        }
+      });
+
+      function update_targets() {
+        window.dispatchEvent(new Event('resize'));
+        var data = {
+          "targetConfig": JSON.stringify(targetConfig),
+          "dist": builderConfig.distURL,
+          "uniqueID": last_rc,
+          "sc_open": "<scr" + "ipt",
+          "sc_close": "</scr" + "ipt>",
+          "image": $("#image-url").val(),
+          "h1": h1current,
+          "h2": h2current
+        };
+        var render = Mustache.render(e_tpl, data);
+        $('#embed-code').text(render);
+      }
+
+      $("#generate-embed").click(function() {
+        $("#action-buttons").hide();
+        $("#get-embed").show();
+      });
+
+      $("body").on("input", ".annotated_media h1, .annotated_media h2", function(e) {
+        var which = $(e.target).prop("tagName");
+        var what = $(e.target).text();
+        if (which == "H1") {
+          h1current = what;
+        }
+        if (which == "H2") {
+          h2current = what;
+        }
+        update_targets();
+      })
+
+    </script>
+
+<script id="preview-template" type="x-tmpl-mustache">
+<!-- UKNF -->
+<div class="annotated_media">
+  <h1 contenteditable="true">{{h1}}</h1>
+  <h2 contenteditable="true">{{h2}}</h2>
+  <img id="{{uniqueID}}" src="{{image}}" width="100%"/>
+</div>
+</script>
+
+<script id="full-embed-template" type="x-tmpl-mustache"><!-- UKNF -->
+<div class="annotated_media">
+  <h1>{{h1}}</h1>
+  <h2>{{h2}}</h2>
+  <img id="{{uniqueID}}" src="{{{image}}}" width="100%"/>
+  {{{sc_open}}} src="{{{dist}}}">{{{sc_close}}}
+  {{{sc_open}}}>
+    window.annotate_media("#{{uniqueID}}", {
+      targets: {{{targetConfig}}}
+    });
+  {{{sc_close}}}
+</div></script>
+
+  </body>
+
+</html>

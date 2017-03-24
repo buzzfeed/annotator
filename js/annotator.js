@@ -161,10 +161,11 @@ window.annotate_media = function(target, config) {
 
       var verticalLine = $('<div></div>').addClass("under-line");
       var verticalLineTop = targetElement.position().top + targetElement.height() + lineWidth;
-      
       var verticalLineStyle = "background-color: " + targetConfiguration.color + "; ";
       verticalLineStyle += "width: " + lineWidth + "px; ";
-      verticalLineStyle += "height: " + (textArea.height() + (textArea.position().top - verticalLineTop) - (lineWidth*1.5)) + "px; ";
+      
+      // 1.4 is a magic number, I admit
+      verticalLineStyle += "height: " + (textArea.height() + (textArea.position().top - verticalLineTop) - (lineWidth*1.4)) + "px; ";
       verticalLineStyle += "left: " + (centreOfCircleX + (lineWidth/2)) + "px; ";
       verticalLineStyle += "top: " + verticalLineTop + "px; ";
 

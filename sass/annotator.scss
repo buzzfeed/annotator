@@ -1,6 +1,8 @@
 .annotated_media { 
   
   // Fix certain CSS overrides which we do not want
+  // Any !importants in this file are to override overly zealous CSS on the page already; you may not need them
+  
   * { line-height: initial; }
   img { user-select: none; }
 
@@ -47,10 +49,12 @@
   
   .under-text * { 
     margin-bottom: 0px !important; 
-    font-family:'Proxima Nova', Helvetica, sans-serif; 
+    font-family: 'Proxima Nova', Helvetica, sans-serif; 
     color:inherit !important;
-    font-size: 1em !important;
+    font-size: 1.2em !important;
     line-height: normal !important;
   }
+
+  @media (max-width:400px) { .under-text * { font-size: 1em !important; } }
 
 }

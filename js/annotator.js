@@ -1,12 +1,28 @@
 var $ = jQuery.noConflict();
 
+// Install the styling if it's not already present on the page
+
 if (!document.getElementById("annotatorInlineStyle")) {
   document.querySelector('head').innerHTML += '<style id="annotatorInlineStyle">' + annotatorInlineStyle + '</style>';
 }
 
+// Helper function for fast mobile click
+jQuery.fn.tclick = function (onclick) {
+	// http://stackoverflow.com/questions/13655919
+	this.on("touchstart", function (e) { 
+			onclick.call(this, e); 
+			e.stopPropagation(); 
+			e.preventDefault();
+	});
+	this.on("click", function (e) {
+			onclick.call(this, e); 
+	}); 
+	return this;
+};
+
 window.annotate_media = function(target, config) {
 
-  // Temporary configuration; this should be set by the widget config
+  // Temporary configuration; this should be set (or at least extended) by the widget config
 
   var target = $(target);
   var lineWidth = 3;
@@ -34,7 +50,7 @@ window.annotate_media = function(target, config) {
 
     $(target).attr("draggable", "false");
     $(target).wrap("<div class='overlay-container'></div>");
-    
+
     var parentContainer = $(".overlay-container").last();
     $(parentContainer).append("<div class='overlay-under'></div>");
 
@@ -82,10 +98,8 @@ window.annotate_media = function(target, config) {
         // Put the circle on the image
         var target = install_target(configuration);
         // Attach click event
-        $(target).on("click", function() {
-          console.log("Click event logged correctly");
+        $(target).tclick(function() {
           if (configuration.content) {
-            console.log("THROWING TO IT");
             install_text(configuration, target);
           }
         })

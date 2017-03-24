@@ -1,6 +1,5 @@
 To fix:
 
-Engine: Remember actively displayed annotation so resize does not knock the selection off
 Dual: Split out the positioning and drawing functions so the builder and the engine can both use them.
 Builder: Ability to edit or delete annotations which have been entered
 Builder: Ability to move the annotation point w/mouse after it's created vs using X and Y coordinates

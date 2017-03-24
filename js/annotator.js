@@ -54,7 +54,7 @@ window.annotate_media = function(target, config) {
     var parentContainer = $(".overlay-container").last();
     $(parentContainer).append("<div class='overlay-under'></div>");
 
-    function install_target(targetConfig) {
+    function install_target(targetConfig, index) {
       
       // All calculations are based off the image we're installing on.
       var imageWidth = $(parentContainer).find("img").innerWidth();
@@ -80,7 +80,7 @@ window.annotate_media = function(target, config) {
       inlineCSS += "height: " + annotationCircleRadius + "px; ";
 
       // Create the DIV, add the style and class
-      var circle = $('<div></div>').attr("style", inlineCSS).addClass("circle");
+      var circle = $('<div></div>').attr("style", inlineCSS).data("index", index).addClass("circle");
 
       // Append it to the container
       $(parentContainer).append(circle);
@@ -93,18 +93,26 @@ window.annotate_media = function(target, config) {
       // Remove any existing targets; this may be a resize event
       $(parentContainer).find(".circle").remove();
 
+      var activeIndex = $(parentContainer).data("activeIndex");
+      if (typeof activeIndex == "undefined") {
+        activeIndex = 1;
+      }
+
       // Install each target
       $.each(config.targets, function(index, configuration) {
         // Put the circle on the image
-        var target = install_target(configuration);
+        var target = install_target(configuration, index);
         // Attach click event
         $(target).tclick(function() {
+          // Remember which index is active so resize events don't knock out the users' choice
+          $(this).parent(".overlay-container").data("activeIndex", $(this).data("index"));
+          // Install the content if there is any
           if (configuration.content) {
             install_text(configuration, target);
           }
         })
-        // If it's the first circle, pop the text on straight away
-        if (index == config.targets.length - 1) {
+        // Pop the text on the active (or first) annotation
+        if (index == activeIndex) {
           if (configuration.content) {
             install_text(configuration, target);
           }

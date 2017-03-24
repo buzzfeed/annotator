@@ -95,7 +95,7 @@ window.annotate_media = function(target, config) {
 
       var activeIndex = $(parentContainer).data("activeIndex");
       if (typeof activeIndex == "undefined") {
-        activeIndex = 1;
+        activeIndex = 0;
       }
 
       // Install each target

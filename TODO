@@ -1,19 +1,20 @@
-Engine
+To fix:
 
-  BUG: There are issues with multiple embeds on a page
-  Enable fastclick for mobile users to tap straight away
+Engine: Remember actively displayed annotation so resize does not knock the selection off
+Dual: Split out the positioning and drawing functions so the builder and the engine can both use them.
+Builder: Ability to edit or delete annotations which have been entered
+Builder: Ability to move the annotation point w/mouse after it's created vs using X and Y coordinates
+Builder: Remove colour picker, offer brand colours on a swatch with opacity configuration only
+
+Additional tasks: Engine:
+
   Add line width as a configurable item
   Add "appear at top" and "appear at bottom" support, so not all annotations have to appear below
-  Vertical line is 1px too short
-  Make desktop font larger, and possibly courier
 
-Builder
+Additional tasks: Builder:
 
-  Remove colour picker, offer brand colours on a swatch with opacity configuration only
   Ability to host images on BuzzFeed's servers
-  Ability to edit or delete annotations which have been entered
   Ability to edit an entire existing embed
   Ability to configure an annotation to "appear at top" or "appear at bottom"
   Being able to easily bold, ital, or hyperlink within the annotations w/o using HTML.
-  Ability to move the annotation point w/mouse after it's created vs using X and Y coordinates
-  A Highlighter style for annotating a phrase or line.
+  Other ways to annotate; a Highlighter style for annotating a phrase or line, or a rectangle.

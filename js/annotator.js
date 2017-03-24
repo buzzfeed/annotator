@@ -34,13 +34,15 @@ window.annotate_media = function(target, config) {
 
     $(target).attr("draggable", "false");
     $(target).wrap("<div class='overlay-container'></div>");
-    $(".overlay-container").append("<div class='overlay-under'></div>");
+    
+    var parentContainer = $(".overlay-container").last();
+    $(parentContainer).append("<div class='overlay-under'></div>");
 
     function install_target(targetConfig) {
       
       // All calculations are based off the image we're installing on.
-      var imageWidth = $(".overlay-container img").innerWidth();
-      var imageHeight = $(".overlay-container img").innerHeight();
+      var imageWidth = $(parentContainer).find("img").innerWidth();
+      var imageHeight = $(parentContainer).find("img").innerHeight();
 
       // Work out the radius. It's a percentage of the image width, but we don't want to make things untappably tiny on mobile.
       var annotationCircleRadius = ((imageWidth/100)*targetConfig.radius);
@@ -65,15 +67,15 @@ window.annotate_media = function(target, config) {
       var circle = $('<div></div>').attr("style", inlineCSS).addClass("circle");
 
       // Append it to the container
-      $(".overlay-container").append(circle);
+      $(parentContainer).append(circle);
       return circle;
 
     }
 
-    function install_targets() {
+    function install_targets(parentContainer) {
 
       // Remove any existing targets; this may be a resize event
-      $(".overlay-container .circle").remove();
+      $(parentContainer).find(".circle").remove();
 
       // Install each target
       $.each(config.targets, function(index, configuration) {
@@ -81,7 +83,9 @@ window.annotate_media = function(target, config) {
         var target = install_target(configuration);
         // Attach click event
         $(target).on("click", function() {
+          console.log("Click event logged correctly");
           if (configuration.content) {
+            console.log("THROWING TO IT");
             install_text(configuration, target);
           }
         })
@@ -95,21 +99,17 @@ window.annotate_media = function(target, config) {
       
     }
 
-    // Immediately install the targets
-    install_targets();
-
-    // Do it again if the window resizes. RESPONSIVE!
-    $(window).on("resize", function() { install_targets() });
-
     function install_text(targetConfiguration, targetElement) {
 
+      var parentContainer = $(targetElement).parent(".overlay-container");
+
       // Based on the width of the image, figure out if to put the text on the left or right of the line
-      var imageWidth = $(".overlay-container img").innerWidth();
+      var imageWidth = $(parentContainer).find("img").innerWidth();
       var imageCenter = imageWidth/2;
       var centreOfCircleX = targetElement.position().left + (targetElement.width()/2);
       
       // Remove any old elements from the container
-      $(".overlay-under .under-text, .overlay-under .under-line").remove();
+      $(parentContainer).find(".overlay-under .under-text, .overlay-under .under-line").remove();
 
       // Set up the text area ready for styling
       var textArea = $('<div></div>').html(targetConfiguration.content).addClass("under-text");
@@ -141,8 +141,8 @@ window.annotate_media = function(target, config) {
     
       // Apply the calculated style to the text area
       textArea.attr("style", textAreaStyle)
-      $(".overlay-under").append(textArea);
-      
+      $(parentContainer).find(".overlay-under").append(textArea);
+
       // Calculate style for the simple vertical line
 
       var verticalLine = $('<div></div>').addClass("under-line");
@@ -156,9 +156,15 @@ window.annotate_media = function(target, config) {
 
       // Draw the vertical line
       verticalLine.attr("style", verticalLineStyle);
-      $(".overlay-under").append(verticalLine);
+      $(parentContainer).find(".overlay-under").append(verticalLine);
 
     }
+
+    // Immediately install the targets
+    install_targets(parentContainer);
+
+    // Do it again if the window resizes. RESPONSIVE!
+    $(window).on("resize", function() { install_targets(parentContainer) }.bind(parentContainer));
 
   }
 

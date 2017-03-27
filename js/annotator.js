@@ -54,7 +54,7 @@ window.annotate_tools = {
     inlineCSS += "height: " + annotationCircleRadius + "px; ";
 
     // Create the DIV, add the style and class
-    var circle = $('<div></div>').attr("style", inlineCSS).data("index", index).addClass("circle");
+    var circle = $('<div></div>').attr("style", inlineCSS).attr("data-index", index).addClass("circle");
 
     // Append it to the container
     $(parentContainer).append(circle);
@@ -79,7 +79,7 @@ window.annotate_tools = {
       // Attach click event
       $(target).tclick(function() {
         // Remember which index is active so resize events don't knock out the users' choice
-        $(this).parent(".overlay-container").data("activeIndex", $(this).data("index"));
+        $(this).parent(".overlay-container").data("activeIndex", $(this).attr("data-index"));
         // Install the content if there is any
         if (configuration.content) {
           window.annotate_tools.install_text(configuration, target);

@@ -31,6 +31,25 @@
       .sp-button-container {
         display: none
       }
+      .annotation_container {
+        position:relative;
+        cursor:pointer;
+        overflow:hidden;
+      }
+      .annotation_container .circle {
+        cursor: move;
+      }
+      .resize_handle {
+        background-image: url(../img/resize.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        width: 10px;
+        height: 10px;
+        position: absolute;
+        bottom: -15px;
+        right: -15px;
+        cursor: nwse-resize;
+      }
     </style>
   
     <div class="container">
@@ -41,7 +60,7 @@
         </div>
       </div>
 
-      <div class="row" id="image-conf">
+      <div class="row" id="image-conf" style="display:none">
         <div class="col-xs-12">
           <p>Hello. Pop your image URL in this box to get started, or feel free to use our example image. It should start https://</p>
           <p><input id="image-url" type="text" class="form-control" placeholder="Image URL" value="https://games.buzzfeed.com/_uk/annotator/img/calibration.png"/></p>
@@ -51,17 +70,15 @@
 
       <div class="row" id="image-preview" style="display:none">
         <div class="col-xs-12">
-          <p><div id="live_preview"></div></p>
-          <p id="action-buttons">
-            <button id="new-annotation" class="btn btn-primary">Place an annotation</button>
-            <button id="generate-embed" class="btn btn-success">Finished; grab embed code</button>
-          </p>
-          <p><div id="readout" style="font-size:1.2em;font-weight:600"></div></p>
+          <p><div id="live_preview" style="width: 700px; margin-left:auto;margin-right:auto;"></div></p>
         </div>
       </div>
 
       <div class="row" id="configure-row" style="display:none">
-        <div class="col-xs-3">
+        <div class="col-xs-12">
+          <h4>Editing annotation #<span id="annoID"></span></h4>
+        </div>
+        <!--<div class="col-xs-3">
           <div class="form-group">
             <label for="x">X Co-ordinate, %</label>
             <input type="text" class="form-control update-live" id="x" placeholder="50">
@@ -78,21 +95,34 @@
             <label for="radius">Radius, %</label>
             <input type="text" class="form-control update-live" id="radius" placeholder="5">
           </div>
-        </div>
-        <div class="col-xs-3">
+        </div>-->
+        <div class="col-xs-4">
           <div class="form-group">
             <label for="color">color</label>
             <input type="text" class="form-control update-live" id="color" placeholder="rgba(234, 19, 148, 0.7)">
           </div>
         </div>
-        <div class="col-xs-12">
+        <div class="col-xs-4">
           <div class="form-group">
             <label for="content">Content, HTML allowed</label>
             <input type="text" class="form-control update-live" id="content" placeholder="None, just circle it">
           </div>
         </div>
-        <div class="col-xs-12">
-          <button id="commit-annotation" class="btn btn-primary">Finished with this annotation</button>
+        <div class="col-xs-4">
+          <div class="form-group">
+            <label for="content">All done?</label>
+            <p>
+            <button id="remove-annotation" class="btn btn-linine btn-warning">Delete</button>
+            <button id="commit-annotation" class="btn btn-inline btn-primary">Done</button>
+            </p>
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="row" id="action-buttons" style="display:none">
+        <div class="col-xs-12" style="text-align:center">
+          <button id="generate-embed" class="btn btn-success">Finished; grab embed code</button>
         </div>
       </div>
 
@@ -107,6 +137,10 @@
 
     <script>
 
+      // GLOBAL MAGIC:
+
+      var minCircleSize = 20;
+
       var tpl;
       var e_tpl;
 
@@ -117,6 +151,7 @@
         e_tpl = $('#full-embed-template').html();
         Mustache.parse(e_tpl);
         $("#image-ready").show();
+        $("#image-ready").trigger("click");
       });
 
       var lastKnownColor = 'rgba(234, 19, 148, 0.7)';
@@ -132,27 +167,42 @@
         }
       });
 
-      var configuringLast = false;
+      var configuringTarget = false;
 
-      function configureLastTarget() {
-        var last = targetConfig[targetConfig.length-1];
+      function configureTarget(index) {
+        var current = targetConfig[index];
+        configuringTarget = index;
+        $("#annoID").text(index);
         $("#configure-row").show();
-        $("#x").val(last.x);
-        $("#y").val(last.y);
-        $("#radius").val(last.radius);
-        $("#content").val(last.content);
-        // Enable listeners
-        configuringLast = true;
+        $("#x").val(current.x);
+        $("#y").val(current.y);
+        $("#radius").val(current.radius);
+        $("#content").val(current.content);
+        $("#action-buttons").hide();
+        $("#get-embed").hide();
       }
 
       $(".update-live").on("input", function() {
-        if (configuringLast == true) {
+        if (configuringTarget !== false) {
           var thing = $(this).attr("id");
           var last = targetConfig[targetConfig.length-1];
           last[thing] = $(this).val();
-          update_targets();
+          update_preview();
         }
       })
+
+      $("#commit-annotation").click(function() {
+        configuringTarget = false;
+        $("#configure-row").hide();
+        $("#action-buttons").show();
+      });
+
+      $("#remove-annotation").click(function() {
+        targetConfig.splice(configuringTarget,1);
+        update_preview();
+        $("#configure-row").hide();
+        $("#action-buttons").show();
+      });
 
       function random_chars() {
         return 'xxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});
@@ -160,8 +210,8 @@
 
       var targetConfig = [];
 
-      var h1current = "An annotated image";
-      var h2current = "Click or Tap to reveal annotations";
+      var h1current = "This is the hed";
+      var h2current = "This is the dek";
 
       function update_preview() {
         last_rc = "annotation-" + random_chars();
@@ -173,80 +223,14 @@
         }
         var render = Mustache.render(tpl, data);
         $('#live_preview').html(render);
-        window.annotate_media("#" + last_rc, {
-          targets: targetConfig
+        $.each(targetConfig, function(i,o) {
+          window.annotate_tools.install_target(".annotation_container", o, i);
+        })
+        // add handles
+        $(".annotation_container .circle").each(function(i,o) {
+          $(o).append("<div class='resize_handle'></div>")
         });
-      }
-
-      $("#commit-annotation").click(function() {
-        configuringLast = false;
-        $("#configure-row").hide();
-        $("#readout").html("");
-        $("#action-buttons").show();
-      })
-
-      $("#image-ready").click(function() {
-        $("#image-conf").hide();
-        $("#image-preview").show();
-        update_preview();
-      });
-
-      var last_rc = false;
-      var placing_annotation = false;
-      var sizing_annotation = false;
-      var placed_percentages = { x: 0, y: 0 };
-
-      $("#new-annotation").click(function() {
-        $("#action-buttons").hide();
-        $("#readout").text("Click the image in the centre of where you want the annotation to be.");
-        placing_annotation = true;
-      });
-
-      $("body").on("click", "#live_preview img", function(e) {
-        if (sizing_annotation == true) {
-          $("#readout").text("Great! Done. Let's get it looking nice...");
-          configureLastTarget();
-          sizing_annotation = false;
-        } else if (placing_annotation == true) {
-          var pos = getPercs(e);
-          placed_percentages.x = pos.x;
-          placed_percentages.y = pos.y;
-          targetConfig.push({
-            "color": lastKnownColor,
-            "radius": 0,
-            "x": placed_percentages.x,
-            "y": placed_percentages.y
-          });
-          update_targets();
-          $("#readout").text("Size it up from the minimum using your cursor, then click to confirm.");
-          placing_annotation = false;
-          sizing_annotation = true;
-        }
-      })
-
-      function getPercs(e) {
-        var iw = $("#live_preview img").innerWidth();
-        var ih = $("#live_preview img").innerHeight();
-        xPos = (e.offsetX/iw)*100;
-        xPos = xPos.toFixed(3);
-        yPos = (e.offsetY/ih)*100;
-        yPos = yPos.toFixed(3);
-        return { x: xPos, y: yPos }
-      }
-
-      $("body").on("mousemove", "#live_preview img", function(e) {
-        if (sizing_annotation) {
-          var pos = getPercs(e);
-          var diffX = pos.x - placed_percentages.x;
-          var diffY = pos.y - placed_percentages.y;
-          var diffMax = Math.max(diffX, diffY);
-          targetConfig[targetConfig.length-1].radius = diffMax.toFixed(3);
-          update_targets();
-        }
-      });
-
-      function update_targets() {
-        window.dispatchEvent(new Event('resize'));
+        // do embed code
         var data = {
           "targetConfig": JSON.stringify(targetConfig),
           "dist": builderConfig.distURL,
@@ -259,6 +243,159 @@
         };
         var render = Mustache.render(e_tpl, data);
         $('#embed-code').text(render);
+      }
+
+      $("#image-ready").click(function() {
+        $("#image-conf").hide();
+        $("#image-preview").show();
+        update_preview();
+      });
+
+      var last_rc = false;
+      var placed_percentages = { x: 0, y: 0 };
+      var dragTrack = false;
+
+      $("body").on("click", ".annotation_container", function(e) {
+
+        if ($(e.target).hasClass("circle")) {
+
+          // clicked on an annotation circle
+          configureTarget(parseInt($(e.target).attr("data-index")));
+
+        } else {
+
+          if (dragTrack == false) {
+
+            var pos = getPercs(e);
+            placed_percentages.x = pos.x;
+            placed_percentages.y = pos.y;
+            targetConfig.push({
+              "color": lastKnownColor,
+              "radius": 0,
+              "x": placed_percentages.x,
+              "y": placed_percentages.y
+            });
+            update_preview();
+            configureTarget(targetConfig.length-1);
+
+          }
+
+        }
+
+      });
+
+      $("body").on("mousedown", ".annotation_container .circle", handle_mousedown);
+
+      function handle_mousedown(e){
+
+        dragTrack = {};
+
+        if ($(e.target).hasClass("resize_handle")) {
+          dragTrack.handle = true;
+          if ($(this).outerWidth() == minCircleSize) {
+            dragTrack.origRadius = 0;
+          } else {
+            var perc = getPercs({
+              offsetX: $(this).width()
+            });
+            dragTrack.origRadius = perc.x;
+          }
+          dragTrack.origRadiusPx = $(this).outerWidth();
+          dragTrack.origX = $(this).position().left;
+          dragTrack.origY = $(this).position().top;
+        } else {
+          dragTrack.handle = false;
+        }
+
+        dragTrack.pageX0 = e.pageX;
+        dragTrack.pageY0 = e.pageY;
+        dragTrack.elem = this;
+        dragTrack.offset0 = $(this).offset();
+
+        function handle_dragging(e){
+          if (dragTrack.handle == false) {
+            var left = dragTrack.offset0.left + (e.pageX - dragTrack.pageX0);
+            var top = dragTrack.offset0.top + (e.pageY - dragTrack.pageY0);
+            $(dragTrack.elem).offset({top: top, left: left});
+          } else {
+            var newx = (e.pageX - dragTrack.pageX0);
+            var newy = (e.pageY - dragTrack.pageY0);
+            var size = Math.max(newx, newy) * 2;
+            var perc = getPercs({
+              offsetX: size
+            });
+            dragTrack.extraSize = perc.x;
+            var livesize = dragTrack.origRadiusPx + size;
+            if (livesize < minCircleSize) {
+              livesize = minCircleSize
+            }
+            $(dragTrack.elem).css({
+              left: dragTrack.origX - (livesize/2) + (dragTrack.origRadiusPx/2),
+              top: dragTrack.origY - (livesize/2) + (dragTrack.origRadiusPx/2),
+              width: livesize,
+              height: livesize
+            })
+          }
+        }
+
+        function handle_mouseup(e){
+          $('body').off('mousemove', handle_dragging).off('mouseup', handle_mouseup);
+          if (dragTrack.handle == false) {
+            finalisePosition(dragTrack.elem);
+          } else {
+            finaliseResize(dragTrack.elem);
+          }
+          setTimeout(function() {
+            dragTrack = false;
+          }, 33);
+        }
+
+        $('body').on('mouseup', handle_mouseup).on('mousemove', handle_dragging);
+      }
+
+      function finaliseResize(elem) {
+        var index = parseInt($(elem).attr("data-index"));
+        var oldsize = parseFloat(targetConfig[index].radius);
+        var minRendered = $("#live_preview img").innerWidth();
+        var minPerc = (minCircleSize/minRendered)*100;
+        if (oldsize < minPerc) {
+          oldsize = minPerc;
+        }
+        var newsize = oldsize + parseFloat(dragTrack.extraSize);
+        if (newsize < 0) {
+          newsize = 0;
+        }
+        targetConfig[index].radius = newsize.toFixed(3);
+        update_preview();
+        configureTarget(index);
+      }
+
+      function finalisePosition(elem) {
+        var index = parseInt($(elem).attr("data-index"));
+        var newplace = getPos(dragTrack.elem);
+        targetConfig[index].x = newplace.x;
+        targetConfig[index].y = newplace.y;
+        update_preview();
+        configureTarget(index);
+      }
+
+      function getPos(elem) {
+        var relpos = $(elem).position();
+        return getPercs({
+          // 3 is a magic number.
+          offsetX: relpos.left + ($(elem).innerWidth()/2) + 3,
+          offsetY: relpos.top + ($(elem).innerHeight()/2) + 3
+        })
+      }
+
+      function getPercs(e) {
+        var iw = $("#live_preview img").innerWidth();
+        var ih = $("#live_preview img").innerHeight();
+        xPos = (e.offsetX/iw)*100;
+        xPos = xPos.toFixed(3);
+        yPos = (e.offsetY/ih)*100;
+        yPos = yPos.toFixed(3);
+        return { x: xPos, y: yPos }
       }
 
       $("#generate-embed").click(function() {
@@ -275,7 +412,7 @@
         if (which == "H2") {
           h2current = what;
         }
-        update_targets();
+        update_preview();
       })
 
     </script>
@@ -285,7 +422,9 @@
 <div class="annotated_media">
   <h1 contenteditable="true">{{h1}}</h1>
   <h2 contenteditable="true">{{h2}}</h2>
-  <img id="{{uniqueID}}" src="{{image}}" width="100%"/>
+  <div class="annotation_container">
+  <img id="{{uniqueID}}" draggable="false" src="{{image}}" width="100%"/>
+  </div>
 </div>
 </script>
 

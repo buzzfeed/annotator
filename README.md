@@ -33,6 +33,6 @@ We would recommend at minimum changing the following to your requirements:
 Be aware: **annotator** will add the following to the global scope of your page.
 
 * Styling which is applied to page objects with a parent class of `.annotated_media`
-* window.annotate_media is a new JS function which may be called
+* window.annotate_media and window.annotate_tools are new JS globals which may be called
 
 **annotator** is powered primarily by a cut-down version of jQuery.

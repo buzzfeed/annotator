@@ -1,22 +1,23 @@
 // GLOBAL MAGIC:
 
 var minCircleSize = 20;
-var tpl;
-var e_tpl;
-var lastKnownColor = 'rgba(234, 19, 148, 0.7)';
-var targetConfig = [];
-var h1current = "Click here to add a hed";
-var h2current = "Click here to add a dek";
-var configuringTarget = false;
-var last_rc = false;
-var placed_percentages = { x: 0, y: 0 };
-var dragTrack = false;
+var borderWidth = 3;
+
+var state = {
+  H1: "Click here to add a hed",
+  H2: "Click here to add a dek",
+  lastUsedColour: 'rgba(234, 19, 148, 0.7)',
+  configuringATarget: false,
+  ptrTrack: false,
+  sessionUnique: false,
+  targetConfiguration: []
+}
 
 ////// FUNCTIONS ////////
 
 function configureTarget(index) {
-  var current = targetConfig[index];
-  configuringTarget = index;
+  var current = state.targetConfiguration[index];
+  state.configuringATarget = index;
   $("#annoID").text(index);
   $("#configure-row").show();
   $("#x").val(current.x);
@@ -34,18 +35,19 @@ function random_chars() {
 }
 
 function update_preview() {
-  last_rc = "annotation-" + random_chars();
+  state.sessionUnique = "annotation-" + random_chars();
   var data = {
     "image": $("#image-url").val(),
-    "uniqueID": last_rc,
-    "h1": h1current,
-    "h2": h2current
+    "uniqueID": state.sessionUnique,
+    "H1": state.H1,
+    "H2": state.H2
   }
+  var tpl = $('#preview-template').html();
   var render = Mustache.render(tpl, data);
   $('#live_preview').html(render);
-  $.each(targetConfig, function(i,o) {
+  $.each(state.targetConfiguration, function(i,o) {
     window.annotate_tools.install_target(".annotation_container", o, i);
-    if (i == configuringTarget) {
+    if (i == state.configuringATarget) {
       $(".circle").last().addClass("circle-editing");
     }
   })
@@ -55,15 +57,16 @@ function update_preview() {
   });
   // do embed code
   var data = {
-    "targetConfig": JSON.stringify(targetConfig),
+    "targetConfig": JSON.stringify(state.targetConfiguration),
     "dist": builderConfig.distURL,
-    "uniqueID": last_rc,
+    "uniqueID": state.sessionUnique,
     "sc_open": "<scr" + "ipt",
     "sc_close": "</scr" + "ipt>",
     "image": $("#image-url").val(),
-    "h1": h1current,
-    "h2": h2current
+    "H1": state.H1,
+    "H2": state.H2
   };
+  var e_tpl = $('#full-embed-template').html();
   var render = Mustache.render(e_tpl, data);
   $('#embed-code').text(render);
 }
@@ -71,52 +74,52 @@ function update_preview() {
 
 function handle_mousedown(e){
 
-  dragTrack = {};
+  state.ptrTrack = {};
 
   if ($(e.target).hasClass("resize_handle")) {
-    dragTrack.handle = true;
+    state.ptrTrack.handle = true;
     configureTarget($(e.target).parent().attr("data-index"));
     if ($(this).outerWidth() == minCircleSize) {
-      dragTrack.origRadius = 0;
+      state.ptrTrack.origRadius = 0;
     } else {
       var perc = getPercs({
         offsetX: $(this).width()
       });
-      dragTrack.origRadius = perc.x;
+      state.ptrTrack.origRadius = perc.x;
     }
-    dragTrack.origRadiusPx = $(this).outerWidth();
-    dragTrack.origX = $(this).position().left;
-    dragTrack.origY = $(this).position().top;
+    state.ptrTrack.origRadiusPx = $(this).outerWidth();
+    state.ptrTrack.origX = $(this).position().left;
+    state.ptrTrack.origY = $(this).position().top;
   } else {
-    dragTrack.handle = false;
+    state.ptrTrack.handle = false;
     configureTarget($(e.target).attr("data-index"));
   }
 
-  dragTrack.pageX0 = e.pageX;
-  dragTrack.pageY0 = e.pageY;
-  dragTrack.elem = this;
-  dragTrack.offset0 = $(this).offset();
+  state.ptrTrack.pageX0 = e.pageX;
+  state.ptrTrack.pageY0 = e.pageY;
+  state.ptrTrack.elem = this;
+  state.ptrTrack.offset0 = $(this).offset();
 
   function handle_dragging(e){
-    if (dragTrack.handle == false) {
-      var left = dragTrack.offset0.left + (e.pageX - dragTrack.pageX0);
-      var top = dragTrack.offset0.top + (e.pageY - dragTrack.pageY0);
-      $(dragTrack.elem).offset({top: top, left: left});
+    if (state.ptrTrack.handle == false) {
+      var left = state.ptrTrack.offset0.left + (e.pageX - state.ptrTrack.pageX0);
+      var top = state.ptrTrack.offset0.top + (e.pageY - state.ptrTrack.pageY0);
+      $(state.ptrTrack.elem).offset({top: top, left: left});
     } else {
-      var newx = (e.pageX - dragTrack.pageX0);
-      var newy = (e.pageY - dragTrack.pageY0);
+      var newx = (e.pageX - state.ptrTrack.pageX0);
+      var newy = (e.pageY - state.ptrTrack.pageY0);
       var size = Math.max(newx, newy) * 2;
       var perc = getPercs({
         offsetX: size
       });
-      dragTrack.extraSize = perc.x;
-      var livesize = dragTrack.origRadiusPx + size;
+      state.ptrTrack.extraSize = perc.x;
+      var livesize = state.ptrTrack.origRadiusPx + size;
       if (livesize < minCircleSize) {
         livesize = minCircleSize
       }
-      $(dragTrack.elem).css({
-        left: dragTrack.origX - (livesize/2) + (dragTrack.origRadiusPx/2),
-        top: dragTrack.origY - (livesize/2) + (dragTrack.origRadiusPx/2),
+      $(state.ptrTrack.elem).css({
+        left: state.ptrTrack.origX - (livesize/2) + (state.ptrTrack.origRadiusPx/2),
+        top: state.ptrTrack.origY - (livesize/2) + (state.ptrTrack.origRadiusPx/2),
         width: livesize,
         height: livesize
       })
@@ -125,13 +128,13 @@ function handle_mousedown(e){
 
   function handle_mouseup(e){
     $('body').off('mousemove', handle_dragging).off('mouseup', handle_mouseup);
-    if (dragTrack.handle == false) {
-      finalisePosition(dragTrack.elem);
+    if (state.ptrTrack.handle == false) {
+      finalisePosition(state.ptrTrack.elem);
     } else {
-      finaliseResize(dragTrack.elem);
+      finaliseResize(state.ptrTrack.elem);
     }
     setTimeout(function() {
-      dragTrack = false;
+      state.ptrTrack = false;
     }, 33);
   }
 
@@ -140,34 +143,33 @@ function handle_mousedown(e){
 
 function finaliseResize(elem) {
   var index = parseInt($(elem).attr("data-index"));
-  var oldsize = parseFloat(targetConfig[index].radius);
+  var oldsize = parseFloat(state.targetConfiguration[index].radius);
   var minRendered = $("#live_preview img").innerWidth();
   var minPerc = (minCircleSize/minRendered)*100;
   if (oldsize < minPerc) {
     oldsize = minPerc;
   }
-  var newsize = oldsize + parseFloat(dragTrack.extraSize);
+  var newsize = oldsize + parseFloat(state.ptrTrack.extraSize);
   if (newsize < 0) {
     newsize = 0;
   }
-  targetConfig[index].radius = newsize.toFixed(3);
+  state.targetConfiguration[index].radius = newsize.toFixed(3);
   update_preview();
 }
 
 function finalisePosition(elem) {
   var index = parseInt($(elem).attr("data-index"));
-  var newplace = getPos(dragTrack.elem);
-  targetConfig[index].x = newplace.x;
-  targetConfig[index].y = newplace.y;
+  var newplace = getPos(state.ptrTrack.elem);
+  state.targetConfiguration[index].x = newplace.x;
+  state.targetConfiguration[index].y = newplace.y;
   update_preview();
 }
 
 function getPos(elem) {
   var relpos = $(elem).position();
   return getPercs({
-    // 3 is a magic number.
-    offsetX: relpos.left + ($(elem).innerWidth()/2) + 3,
-    offsetY: relpos.top + ($(elem).innerHeight()/2) + 3
+    offsetX: relpos.left + ($(elem).innerWidth()/2) + borderWidth,
+    offsetY: relpos.top + ($(elem).innerHeight()/2) + borderWidth
   })
 }
 
@@ -186,23 +188,23 @@ function getPercs(e) {
 $(document).ready(function() {
 
   $(".update-live").on("input", function() {
-    if (configuringTarget !== false) {
+    if (state.configuringATarget !== false) {
       var thing = $(this).attr("id");
-      var last = targetConfig[targetConfig.length-1];
+      var last = state.targetConfiguration[state.targetConfiguration.length-1];
       last[thing] = $(this).val();
       update_preview();
     }
   })
 
   $("#commit-annotation").click(function() {
-    configuringTarget = false;
+    state.configuringATarget = false;
     $(".circle").removeClass("circle-editing");
     $("#configure-row").hide();
     $("#action-buttons").show();
   });
 
   $("#remove-annotation").click(function() {
-    targetConfig.splice(configuringTarget,1);
+    state.targetConfiguration.splice(state.configuringATarget,1);
     update_preview();
     $("#configure-row").hide();
     $("#action-buttons").show();
@@ -212,11 +214,6 @@ $(document).ready(function() {
     $("#action-buttons").show();
     $("#image-conf").hide();
     $("#image-preview").show();
-    // Parse templates
-    tpl = $('#preview-template').html();
-    Mustache.parse(tpl);
-    e_tpl = $('#full-embed-template').html();
-    Mustache.parse(e_tpl);
     // Prep color picker
     $("#color").spectrum({
       showPalette: true,
@@ -228,8 +225,8 @@ $(document).ready(function() {
       ],
       showAlpha: true,
       move: function(color) {
-        lastKnownColor = color.toRgbString();
-        $("#color").val(lastKnownColor);
+        state.lastUsedColour = color.toRgbString();
+        $("#color").val(state.lastUsedColour);
         $("#color").trigger("input");
       }
     });
@@ -245,23 +242,21 @@ $(document).ready(function() {
 
     } else {
 
-      if (configuringTarget !== false) {
+      if (state.configuringATarget !== false) {
 
         $("#commit-annotation").trigger("click");
 
-      } else if (dragTrack == false) {
+      } else if (state.ptrTrack == false) {
 
         var pos = getPercs(e);
-        placed_percentages.x = pos.x;
-        placed_percentages.y = pos.y;
-        targetConfig.push({
-          "color": lastKnownColor,
+        state.targetConfiguration.push({
+          "color": state.lastUsedColour,
           "radius": 0,
-          "x": placed_percentages.x,
-          "y": placed_percentages.y
+          "x": pos.x,
+          "y": pos.y
         });
         update_preview();
-        configureTarget(targetConfig.length-1);
+        configureTarget(state.targetConfiguration.length-1);
 
       }
 
@@ -276,15 +271,10 @@ $(document).ready(function() {
     $("#get-embed").show();
   });
 
-  $("body").on("input", ".annotated_media h1, .annotated_media h2", function(e) {
+  $("body").on("blur", ".annotated_media H1, .annotated_media H2", function(e) {
     var which = $(e.target).prop("tagName");
     var what = $(e.target).text();
-    if (which == "H1") {
-      h1current = what;
-    }
-    if (which == "H2") {
-      h2current = what;
-    }
+    state[which] = what;
     update_preview();
   })
 

@@ -112,8 +112,8 @@
     <script id="preview-template" type="x-tmpl-mustache">
     <!-- UKNF -->
     <div class="annotated_media">
-      <h1 contenteditable="true">{{h1}}</h1>
-      <h2 contenteditable="true">{{h2}}</h2>
+      <h1 contenteditable="true">{{H1}}</h1>
+      <h2 contenteditable="true">{{H2}}</h2>
       <div class="annotation_container">
       <img id="{{uniqueID}}" draggable="false" src="{{image}}" width="100%"/>
       </div>
@@ -121,17 +121,17 @@
     </script>
 
     <script id="full-embed-template" type="x-tmpl-mustache"><!-- UKNF -->
-    <div class="annotated_media">
-      <h1>{{h1}}</h1>
-      <h2>{{h2}}</h2>
-      <img id="{{uniqueID}}" src="{{{image}}}" width="100%"/>
-      {{{sc_open}}} src="{{{dist}}}">{{{sc_close}}}
-      {{{sc_open}}}>
-        window.annotate_media("#{{uniqueID}}", {
-          targets: {{{targetConfig}}}
-        });
-      {{{sc_close}}}
-    </div></script>
+<div class="annotated_media">
+  <h1>{{H1}}</h1>
+  <h2>{{H2}}</h2>
+  <img id="{{uniqueID}}" src="{{{image}}}" width="100%"/>
+  {{{sc_open}}} src="{{{dist}}}">{{{sc_close}}}
+  {{{sc_open}}}>
+  window.annotate_media("#{{uniqueID}}", {
+    targets: {{{targetConfig}}}
+  });
+  {{{sc_close}}}
+</div></script>
 
   </body>
 

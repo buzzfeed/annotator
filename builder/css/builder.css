@@ -1,0 +1,42 @@
+body * {
+  font-family: 'Proxima Nova', Gotham, Helvetica, Arial, sans-serif;
+}
+.sp-replacer {
+  display:block;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px;
+  padding-left: 10px;
+}
+.sp-container {
+  background-color: #fff;
+}
+.sp-preview {
+  width: calc(100% - 12px);
+}
+.sp-palette-container {
+  max-width: 60px;
+}
+.annotation_container {
+  position:relative;
+  cursor:pointer;
+  overflow:hidden;
+}
+.annotation_container .circle {
+  cursor: move;
+}
+.resize_handle {
+  background-image: url(../../img/resize.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  bottom: -16px;
+  right: -16px;
+  cursor: nwse-resize;
+}
+.circle-editing {
+  border-style: dotted !important;
+}

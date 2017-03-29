@@ -1,11 +1,5 @@
 var $ = jQuery.noConflict();
 
-// Install the styling if it's not already present on the page
-
-if (!document.getElementById("annotatorInlineStyle")) {
-  document.querySelector('head').innerHTML += '<style id="annotatorInlineStyle">' + annotatorInlineStyle + '</style>';
-}
-
 if (!jQuery.fn.tclick) {
   // Helper function for fast mobile click
   jQuery.fn.tclick = function (onclick) {
@@ -173,6 +167,12 @@ window.annotate_tools = {
 }
 
 window.annotate_media = function(target, config) {
+
+  // Install the styling if it's not already present on the page
+
+  if (!document.getElementById("annotatorInlineStyle")) {
+    $("head").append('<style id="annotatorInlineStyle">' + annotatorInlineStyle + '</style>');
+  }
 
   var target = $(target);
 

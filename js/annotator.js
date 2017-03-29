@@ -28,11 +28,13 @@ window.annotate_tools = {
       $("head").append('<style id="annotatorInlineStyle">' + annotatorInlineStyle + '</style>');
     }
 
+    var embed_unique_id = $(target).attr("id");
+
     // Wrap the image to create a parent container
     $(target).attr("draggable", "false");
     $(target).wrap("<div class='overlay-container'></div>");
 
-    var parent = $(".overlay-container").last();
+    var parent = $("#" + embed_unique_id).parent(".overlay-container");
     $(parent).append("<div class='overlay-under'></div>");
 
     return parent;

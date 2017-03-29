@@ -22,6 +22,12 @@ window.annotate_tools = {
 
   "initialise": function(target) {
 
+    // Install the styling if it's not already present on the page
+
+    if (!document.getElementById("annotatorInlineStyle")) {
+      $("head").append('<style id="annotatorInlineStyle">' + annotatorInlineStyle + '</style>');
+    }
+
     // Wrap the image to create a parent container
     $(target).attr("draggable", "false");
     $(target).wrap("<div class='overlay-container'></div>");
@@ -167,12 +173,6 @@ window.annotate_tools = {
 }
 
 window.annotate_media = function(target, config) {
-
-  // Install the styling if it's not already present on the page
-
-  if (!document.getElementById("annotatorInlineStyle")) {
-    $("head").append('<style id="annotatorInlineStyle">' + annotatorInlineStyle + '</style>');
-  }
 
   var target = $(target);
 

@@ -110,8 +110,6 @@ window.annotate_tools = {
 
   "install_text": function (targetConfiguration, targetElement) {
 
-    console.log("OK, hi");
-
     var parentContainer = $(targetElement).parent(".overlay-container");
 
     // Based on the width of the image, figure out if to put the text on the left or right of the line

@@ -59,6 +59,7 @@ module.exports = function(grunt) {
           'dist/build/annotator.js': [
             'node_modules/jquery/dist/jquery.min.js',
             'dist/build/style.js',
+            'js/analytics.js', // optional
             'js/annotator.js'
           ]
         }

@@ -51,7 +51,6 @@ function update_preview() {
     if (o.content) {
       window.annotate_tools.install_text(o, target);
     }
-    console.log("Bonza");
     if (i == state.configuringATarget) {
       $(".circle").last().addClass("circle-editing");
     }

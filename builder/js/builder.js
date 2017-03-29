@@ -45,14 +45,19 @@ function update_preview() {
   var tpl = $('#preview-template').html();
   var render = Mustache.render(tpl, data);
   $('#live_preview').html(render);
+  window.annotate_tools.initialise("#" + state.sessionUnique);
   $.each(state.targetConfiguration, function(i,o) {
-    window.annotate_tools.install_target(".annotation_container", o, i);
+    var target = window.annotate_tools.install_target(".overlay-container", o, i);
+    if (o.content) {
+      window.annotate_tools.install_text(o, target);
+    }
+    console.log("Bonza");
     if (i == state.configuringATarget) {
       $(".circle").last().addClass("circle-editing");
     }
   })
   // add handles
-  $(".annotation_container .circle").each(function(i,o) {
+  $(".overlay-container .circle").each(function(i,o) {
     $(o).append("<div class='resize_handle'></div>")
   });
   // do embed code
@@ -233,7 +238,7 @@ $(document).ready(function() {
     update_preview();
   });
 
-  $("body").on("click", ".annotation_container", function(e) {
+  $("body").on("click", ".overlay-container", function(e) {
 
     if ($(e.target).hasClass("circle")) {
 
@@ -264,7 +269,7 @@ $(document).ready(function() {
 
   });
 
-  $("body").on("mousedown", ".annotation_container .circle", handle_mousedown);
+  $("body").on("mousedown", ".overlay-container .circle", handle_mousedown);
 
   $("#generate-embed").click(function() {
     $("#action-buttons").hide();

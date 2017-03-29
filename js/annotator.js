@@ -25,6 +25,19 @@ if (!jQuery.fn.tclick) {
 window.annotate_tools = {
 
   "lineWidth": 3, // px
+
+  "initialise": function(target) {
+
+    // Wrap the image to create a parent container
+    $(target).attr("draggable", "false");
+    $(target).wrap("<div class='overlay-container'></div>");
+
+    var parent = $(".overlay-container").last();
+    $(parent).append("<div class='overlay-under'></div>");
+
+    return parent;
+    
+  },
   
   "install_target": function (parentContainer, targetConfig, index) {
     
@@ -96,6 +109,8 @@ window.annotate_tools = {
   },
 
   "install_text": function (targetConfiguration, targetElement) {
+
+    console.log("OK, hi");
 
     var parentContainer = $(targetElement).parent(".overlay-container");
 
@@ -169,12 +184,8 @@ window.annotate_media = function(target, config) {
 
     if (target.height() > 50) {
       
-      // Wrap the image to create a parent container
-      $(target).attr("draggable", "false");
-      $(target).wrap("<div class='overlay-container'></div>");
-
-      var parentContainer = $(".overlay-container").last();
-      $(parentContainer).append("<div class='overlay-under'></div>");
+      // Set up the DIVs
+      var parentContainer = window.annotate_tools.initialise(target);
 
       // Install all the annotation targets
       window.annotate_tools.install_all_targets(config, parentContainer);

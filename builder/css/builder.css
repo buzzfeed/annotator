@@ -18,12 +18,7 @@ body * {
 .sp-palette-container {
   max-width: 60px;
 }
-.annotation_container {
-  position:relative;
-  cursor:pointer;
-  overflow:hidden;
-}
-.annotation_container .circle {
+.overlay-container .circle {
   cursor: move;
 }
 .resize_handle {

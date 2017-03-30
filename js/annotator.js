@@ -151,7 +151,6 @@ if (!window.annotate_tools) {
       verticalLineStyle += "width: " + targetConfig.lineWidth + "px; ";
       
       // 4 = approx half a 1em line height; it is a magic number, I admit
-      console.log("Line width: ", targetConfig.lineWidth)
       verticalLineStyle += "height: " + (textArea.height() + (textArea.position().top - verticalLineTop) - 4) + "px; ";
       verticalLineStyle += "left: " + (centreOfAnnotationX + (targetConfig.lineWidth/2)) + "px; ";
       verticalLineStyle += "top: " + verticalLineTop + "px; ";

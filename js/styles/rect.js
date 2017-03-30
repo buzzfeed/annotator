@@ -22,7 +22,7 @@ if (!window.annotate_tools.shapes.rect) {
       annotationProperties.x -= annotationProperties.width/2;
 
       if (!targetConfig.lineWidth) {
-        targetConfig.lineWidth = 10;
+        targetConfig.lineWidth = 3;
       }
       
       var inlineCSS = "top: " + annotationProperties.y + "px; ";

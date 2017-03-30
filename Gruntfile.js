@@ -43,24 +43,16 @@ module.exports = function(grunt) {
       dist: {
         nonull: true,
         options: {
-          process: function(src, filepath) {
-            if (filepath == "node_modules/jquery/dist/jquery.min.js") {
-              console.log("Adding anon function start");
-              return "(function() {\n" + src;
-            } else if (filepath == "js/annotator.js") {
-              console.log("Adding anon function end");
-              return src + "\n})();";
-            } else {
-              return src;
-            }
-          },
+          banner: "(function() {\n",
+          footer: "\n})();"
         },
         files: {
           'dist/build/annotator.js': [
             'node_modules/jquery/dist/jquery.min.js',
             'dist/build/style.js',
-            'js/analytics.js', // optional
-            'js/annotator.js'
+            'js/annotator.js',
+            'js/plugins/*.js', // optional
+            'anon_end'
           ]
         }
       }
@@ -75,7 +67,7 @@ module.exports = function(grunt) {
     clean: ['dist/build'],
     watch: {
       app: {
-        files: ['./sass/*.scss', './js/*.js'],
+        files: ['./sass/*.scss', './js/*.js', './js/plugins/*.js'],
         tasks: ['sass', 'cssmin', 'csstojs', 'concat', 'uglify', 'clean'],
       }
     }

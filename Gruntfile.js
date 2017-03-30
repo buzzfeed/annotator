@@ -39,6 +39,7 @@ module.exports = function(grunt) {
         }
       }
     },
+    pkg: grunt.file.readJSON('package.json'),
     concat: {
       dist: {
         nonull: true,
@@ -58,6 +59,13 @@ module.exports = function(grunt) {
       }
     },
     uglify: {
+      options: {
+        compress: {
+          drop_console: true
+        },
+        banner: "/*! <%= pkg.name %> - built <%= grunt.template.today('dddd, mmmm dS, yyyy, h:MM:ss TT') %> \n" +
+        "MIT Licensed, source available at <%= pkg.homepage %> */ \n\n"
+      },
       dist: {
         files: {
           'dist/annotator.min.js': ['dist/build/annotator.js']

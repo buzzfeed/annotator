@@ -8,6 +8,7 @@ var state = {
   H1: "Click here to add a hed",
   H2: "Click here to add a dek",
   lastUsedColour: 'rgba(234, 19, 148, 0.7)',
+  lastUsedStyle: 'circle',
   configuringATarget: false,
   ptrTrack: false,
   sessionUnique: false,
@@ -22,6 +23,7 @@ function configureTarget(index) {
   $("#annoID").text(index);
   $("#configure-row").show();
   $("#content").val(current.content);
+  $("#style").val(current.style);
   $("#action-buttons").hide();
   $("#get-embed").hide();
   $(".annotation-target").removeClass("annotation-target-editing");
@@ -292,6 +294,7 @@ $(document).ready(function() {
       
       // On the fly conversion. FIXME: Not really scalable
       if (thing == "style") {
+        state.lastUsedStyle = $(this).val();
         if (conf.style == "circle" && $(this).val() == "rect") {
           conf.width = conf.radius;
           conf.height = conf.radius;
@@ -364,13 +367,24 @@ $(document).ready(function() {
       } else if (state.ptrTrack == false) {
 
         var pos = getPercs(e);
-        state.targetConfiguration.push({
-          "style": "circle",
-          "color": state.lastUsedColour,
-          "radius": 0,
-          "x": pos.x,
-          "y": pos.y
-        });
+        if (state.lastUsedStyle == "circle") {
+          state.targetConfiguration.push({
+            "style": "circle",
+            "color": state.lastUsedColour,
+            "radius": 0,
+            "x": pos.x,
+            "y": pos.y
+          });
+        } else if (state.lastUsedStyle == "rect") {
+          state.targetConfiguration.push({
+            "style": "rect",
+            "color": state.lastUsedColour,
+            "width": 0,
+            "height": 0,
+            "x": pos.x,
+            "y": pos.y
+          });
+        }
         update_preview();
         configureTarget(state.targetConfiguration.length-1);
 

@@ -28,6 +28,7 @@ We would recommend at minimum changing the following to your requirements:
 
 * `builder/builder-config.js` to point to your distributable
 * `sass/annotator.sass` to meet your own styling requirements
+* `js/plugins/` to match your environment - analytics, image hosting, etc
 * We use the `<!-- UKNF -->` tag to mark our embeds as special in the BuzzFeed CMS. You probably won't need this tag, so feel free to remove it.
 
 Be aware: **annotator** will add the following to the global scope of your page.

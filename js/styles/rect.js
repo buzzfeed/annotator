@@ -8,7 +8,7 @@ if (!window.annotate_tools.shapes.rect) {
 
       // Work out the radius. It's a percentage of the image width, but we don't want to make things untappably tiny on mobile.
       annotationProperties.width = ((imageWidth/100)*targetConfig.width);
-      annotationProperties.height = ((imageWidth/100)*targetConfig.height);
+      annotationProperties.height = ((imageHeight/100)*targetConfig.height);
       
       if (annotationProperties.width < minTargetSize) { annotationProperties.width = minTargetSize; }
       if (annotationProperties.height < minTargetSize) { annotationProperties.height = minTargetSize; }

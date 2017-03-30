@@ -1,6 +1,7 @@
 // GLOBAL MAGIC:
 
-var minAnnotationDimensionSize = 20;
+// FIXME: THIS IS DEPENDENT ON THE STYLE USED, AND IS THROWING OFF DIMS.
+var minAnnotationDimensionSize = 25;
 var borderWidth = 3;
 
 var state = {
@@ -20,9 +21,6 @@ function configureTarget(index) {
   state.configuringATarget = index;
   $("#annoID").text(index);
   $("#configure-row").show();
-  $("#x").val(current.x);
-  $("#y").val(current.y);
-  $("#radius").val(current.radius);
   $("#content").val(current.content);
   $("#action-buttons").hide();
   $("#get-embed").hide();
@@ -48,11 +46,11 @@ function update_preview() {
   window.annotate_tools.initialise("#" + state.sessionUnique);
   $.each(state.targetConfiguration, function(i,o) {
     var target = window.annotate_tools.install_target(".overlay-container", o, i);
-    if (o.content) {
-      window.annotate_tools.install_text(o, target);
-    }
     if (i == state.configuringATarget) {
       $(".annotation-target").last().addClass("annotation-target-editing");
+      if (o.content) {
+        window.annotate_tools.install_text(o, target);
+      }
     }
   })
   // add handles
@@ -81,22 +79,28 @@ function handle_mousedown(e){
   state.ptrTrack = {};
 
   if ($(e.target).hasClass("resize_handle")) {
+
     state.ptrTrack.handle = true;
     configureTarget($(e.target).parent().attr("data-index"));
-    if ($(this).outerWidth() == minAnnotationDimensionSize) {
-      state.ptrTrack.origRadius = 0;
+
+    if ($(this).innerWidth() == minAnnotationDimensionSize) {
+      state.ptrTrack.origRadiusPixels = 0;
+      state.ptrTrack.originalWidthPixels = 0;
+      state.ptrTrack.originalHeightPixels = 0;
     } else {
-      var perc = getPercs({
-        offsetX: $(this).width()
-      });
-      state.ptrTrack.origRadius = perc.x;
+      state.ptrTrack.origRadiusPixels = $(this).innerWidth();
+      state.ptrTrack.originalWidthPixels = $(this).innerWidth() + (borderWidth*2);
+      state.ptrTrack.originalHeightPixels = $(this).innerHeight() + (borderWidth*2);
     }
-    state.ptrTrack.origRadiusPx = $(this).outerWidth();
+
     state.ptrTrack.origX = $(this).position().left;
     state.ptrTrack.origY = $(this).position().top;
+
   } else {
+
     state.ptrTrack.handle = false;
     configureTarget($(e.target).attr("data-index"));
+
   }
 
   state.ptrTrack.pageX0 = e.pageX;
@@ -105,28 +109,88 @@ function handle_mousedown(e){
   state.ptrTrack.offset0 = $(this).offset();
 
   function handle_dragging(e){
+
+    // Remove line and under text
+    $(".under-line").remove();
+
     if (state.ptrTrack.handle == false) {
+
+      // They are dragging the annotation target itself
+
       var left = state.ptrTrack.offset0.left + (e.pageX - state.ptrTrack.pageX0);
       var top = state.ptrTrack.offset0.top + (e.pageY - state.ptrTrack.pageY0);
       $(state.ptrTrack.elem).offset({top: top, left: left});
+
     } else {
-      var newx = (e.pageX - state.ptrTrack.pageX0);
-      var newy = (e.pageY - state.ptrTrack.pageY0);
-      var size = Math.max(newx, newy) * 2;
-      var perc = getPercs({
-        offsetX: size
-      });
-      state.ptrTrack.extraSize = perc.x;
-      var livesize = state.ptrTrack.origRadiusPx + size;
-      if (livesize < minAnnotationDimensionSize) {
-        livesize = minAnnotationDimensionSize
+
+      // They are dragging the resize handle
+
+      var mode = "radius";
+      var targetConfig = state.targetConfiguration[$(state.ptrTrack.elem).attr("data-index")];
+
+      if (targetConfig.style == "rect") {
+        mode = "xy";
       }
-      $(state.ptrTrack.elem).css({
-        left: state.ptrTrack.origX - (livesize/2) + (state.ptrTrack.origRadiusPx/2),
-        top: state.ptrTrack.origY - (livesize/2) + (state.ptrTrack.origRadiusPx/2),
-        width: livesize,
-        height: livesize
-      })
+
+      if (mode == "radius") {
+
+        // RADIUS ADJUST
+
+        var newx = (e.pageX - state.ptrTrack.pageX0);
+        var newy = (e.pageY - state.ptrTrack.pageY0);
+        var size = Math.max(newx, newy) * 2;
+        
+        var perc = getPercs({
+          offsetX: (size-(borderWidth*2))
+        });
+        
+        state.ptrTrack.extraSize = perc.x;
+        
+        var livesize = parseFloat(state.ptrTrack.origRadiusPixels) + size;
+
+        if (livesize < minAnnotationDimensionSize) {
+          livesize = minAnnotationDimensionSize
+        }
+
+        $(state.ptrTrack.elem).css({
+          left: state.ptrTrack.origX - (livesize/2) + (state.ptrTrack.origRadiusPixels/2) + (borderWidth),
+          top: state.ptrTrack.origY - (livesize/2) + (state.ptrTrack.origRadiusPixels/2) + (borderWidth),
+          width: livesize,
+          height: livesize
+        })
+
+      } else if (mode == "xy") {
+
+        // XY ADJUST
+
+        var newx = (e.pageX - state.ptrTrack.pageX0);
+        var newy = (e.pageY - state.ptrTrack.pageY0);
+
+        var perc = getPercs({
+          offsetX: (newx),
+          offsetY: (newy)
+        });
+
+        var livesizeX = state.ptrTrack.originalWidthPixels + (newx*2);
+        var livesizeY = state.ptrTrack.originalHeightPixels + (newy*2);
+
+        if (livesizeX < minAnnotationDimensionSize) {
+          livesizeX = minAnnotationDimensionSize
+        }
+
+        if (livesizeY < minAnnotationDimensionSize) {
+          livesizeY = minAnnotationDimensionSize
+        }
+
+        $(state.ptrTrack.elem).css({
+          left: (state.ptrTrack.origX) - (livesizeX/2) + (state.ptrTrack.originalWidthPixels/2),
+          top: (state.ptrTrack.origY) - (livesizeY/2) + (state.ptrTrack.originalHeightPixels/2),
+          width: livesizeX,
+          height: livesizeY
+        })
+
+      }
+
     }
   }
 
@@ -146,19 +210,48 @@ function handle_mousedown(e){
 }
 
 function finaliseResize(elem) {
+
   var index = parseInt($(elem).attr("data-index"));
-  var oldsize = parseFloat(state.targetConfiguration[index].radius);
-  var minRendered = $("#live_preview img").innerWidth();
-  var minPerc = (minAnnotationDimensionSize/minRendered)*100;
-  if (oldsize < minPerc) {
-    oldsize = minPerc;
+  var conf = state.targetConfiguration[index];
+  
+  var iwPixels = $("#live_preview img").innerWidth();
+  var minPerc = (minAnnotationDimensionSize/iwPixels)*100;
+
+  if (typeof conf.radius !== "undefined") {
+
+    // Radius finalisation
+
+    var oldsize = parseFloat(conf.radius);
+    
+    if (oldsize < minPerc) { oldsize = minPerc; }
+
+    var newsize = oldsize + parseFloat(state.ptrTrack.extraSize);
+    if (newsize < 0) { newsize = 0; }
+    
+    conf.radius = newsize.toFixed(3);
+
+  } else if (typeof conf.width !== "undefined" && typeof conf.height !== "undefined") {
+
+    // XY finalisation
+
+    var nw = $(elem).outerWidth();
+    var nh = $(elem).outerHeight();
+
+    if (nw < minAnnotationDimensionSize) { nw = minAnnotationDimensionSize; }
+    if (nh < minAnnotationDimensionSize) { nh = minAnnotationDimensionSize; }
+
+    var percs = getPercs({
+      offsetX: nw,
+      offsetY: nh
+    });
+    
+    conf.width = percs.x;
+    conf.height = percs.y;
+
   }
-  var newsize = oldsize + parseFloat(state.ptrTrack.extraSize);
-  if (newsize < 0) {
-    newsize = 0;
-  }
-  state.targetConfiguration[index].radius = newsize.toFixed(3);
+
   update_preview();
+    
 }
 
 function finalisePosition(elem) {
@@ -193,16 +286,34 @@ $(document).ready(function() {
 
   $(".update-live").on("input", function() {
     if (state.configuringATarget !== false) {
+
       var thing = $(this).attr("id");
-      var last = state.targetConfiguration[state.targetConfiguration.length-1];
-      last[thing] = $(this).val();
+      var conf = state.targetConfiguration[state.configuringATarget];
+      
+      // On the fly conversion. FIXME: Not really scalable
+      if (thing == "style") {
+        if (conf.style == "circle" && $(this).val() == "rect") {
+          conf.width = conf.radius;
+          conf.height = conf.radius;
+          delete conf.radius;
+        } else if (conf.style == "rect" && $(this).val() == "circle") {
+          conf.radius = Math.max(conf.width, conf.height)/2;
+          delete conf.width;
+          delete conf.height;
+        }
+      }
+
+      conf[thing] = $(this).val();
+
       update_preview();
+
     }
   })
 
   $("#commit-annotation").click(function() {
     state.configuringATarget = false;
     $(".annotation-target").removeClass("annotation-target-editing");
+    $(".overlay-under").hide();
     $("#configure-row").hide();
     $("#action-buttons").show();
   });
@@ -254,6 +365,7 @@ $(document).ready(function() {
 
         var pos = getPercs(e);
         state.targetConfiguration.push({
+          "style": "circle",
           "color": state.lastUsedColour,
           "radius": 0,
           "x": pos.x,

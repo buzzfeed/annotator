@@ -51,6 +51,8 @@ if (!window.annotate_tools) {
 
       // Resolve the CSS for the chosen style
       var inlineCSS;
+
+      // If no style is stated, default to circle, as it got here first.
       if (targetConfig.style && window.annotate_tools.shapes[targetConfig.style]) {
         inlineCSS = window.annotate_tools.shapes[targetConfig.style].getStyle(imageWidth, imageHeight, targetConfig);
       } else {

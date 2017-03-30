@@ -5,8 +5,8 @@ if (typeof window.annotate_tools.analytics == "undefined") {
 
   window.annotate_tools.analytics = true;
 
-  // Monitor entire page for clicks on .circle within our container, record clicks/taps
-  jQuery("body").on("click", ".overlay-container .circle", function() {
+  // Monitor entire page for clicks on .annotation-target within our container, record clicks/taps
+  jQuery("body").on("click", ".overlay-container .annotation-target", function() {
     var evdata = {
         "category": 'NewFormats: Annotator',
         "action": "Annotation clicked",

@@ -51,7 +51,7 @@ module.exports = function(grunt) {
             'node_modules/jquery/dist/jquery.min.js',
             'dist/build/style.js',
             'js/annotator.js',
-            'js/plugins/*.js', // optional
+            'js/*/*.js',
             'anon_end'
           ]
         }
@@ -67,7 +67,7 @@ module.exports = function(grunt) {
     clean: ['dist/build'],
     watch: {
       app: {
-        files: ['./sass/*.scss', './js/*.js', './js/plugins/*.js'],
+        files: ['./sass/*.scss', './js/*.js', './js/*/*.js'],
         tasks: ['sass', 'cssmin', 'csstojs', 'concat', 'uglify', 'clean'],
       }
     }

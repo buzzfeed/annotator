@@ -22,7 +22,9 @@ if (!window.annotate_tools) {
 
   window.annotate_tools = {
 
-    "lineWidth": 3, // px
+    "shapes": {},
+
+    "defaultLineWidth": 3, // px
 
     "initialise": function(target) {
 
@@ -43,44 +45,31 @@ if (!window.annotate_tools) {
     
     "install_target": function (parentContainer, targetConfig, index) {
       
-      var minTargetSize = 20; // px
-
       // All calculations are based off the image we're installing on.
       var imageWidth = $(parentContainer).find("img").innerWidth();
       var imageHeight = $(parentContainer).find("img").innerHeight();
 
-      // Work out the radius. It's a percentage of the image width, but we don't want to make things untappably tiny on mobile.
-      var annotationCircleRadius = ((imageWidth/100)*targetConfig.radius);
-      if (annotationCircleRadius < minTargetSize) { annotationCircleRadius = minTargetSize; }
-
-      // The position, unadjusted for the size of the circle. Will sit to the bottom right of the intended origin if left unadjusted.
-      var placementTop = (imageHeight/100) * targetConfig.y;
-      var placementLeft = (imageWidth/100) * targetConfig.x;
-
-      // Now adjust for size of the circle
-      placementTop -= annotationCircleRadius/2;
-      placementLeft -= annotationCircleRadius/2;
-
-      // Set up the specific CSS properties of this target
-      var inlineCSS = "top: " + placementTop + "px; ";
-      inlineCSS += "left: " + placementLeft + "px; ";
-      inlineCSS += "border: " + this.lineWidth + "px solid " + targetConfig.color + "; ";
-      inlineCSS += "width: " + annotationCircleRadius + "px; ";
-      inlineCSS += "height: " + annotationCircleRadius + "px; ";
+      // Resolve the CSS for the chosen style
+      var inlineCSS;
+      if (targetConfig.style && window.annotate_tools.shapes[targetConfig.style]) {
+        inlineCSS = window.annotate_tools.shapes[targetConfig.style].getStyle(imageWidth, imageHeight, targetConfig);
+      } else {
+        inlineCSS = window.annotate_tools.shapes.circle.getStyle(imageWidth, imageHeight, targetConfig);
+      }
 
       // Create the DIV, add the style and class
-      var circle = $('<div></div>').attr("style", inlineCSS).attr("data-index", index).addClass("circle");
+      var annotation = $('<div></div>').attr("style", inlineCSS).attr("data-index", index).addClass("annotation-target");
 
       // Append it to the container
-      $(parentContainer).append(circle);
-      return circle;
+      $(parentContainer).append(annotation);
+      return annotation;
 
     },
 
     "install_all_targets": function(config, parentContainer) {
 
       // Remove any existing targets; this may be a resize event
-      $(parentContainer).find(".circle").remove();
+      $(parentContainer).find(".annotation-target").remove();
 
       var activeIndex = $(parentContainer).data("activeIndex");
       if (typeof activeIndex == "undefined") {
@@ -89,7 +78,7 @@ if (!window.annotate_tools) {
 
       // Install each target
       $.each(config.targets, function(index, configuration) {
-        // Put the circle on the image
+        // Put the annotation target on the image
         var target = window.annotate_tools.install_target(parentContainer, configuration, index);
         // Attach click event
         $(target).tclick(function() {
@@ -110,43 +99,43 @@ if (!window.annotate_tools) {
       
     },
 
-    "install_text": function (targetConfiguration, targetElement) {
+    "install_text": function (targetConfig, targetElement) {
 
       var parentContainer = $(targetElement).parent(".overlay-container");
 
       // Based on the width of the image, figure out if to put the text on the left or right of the line
       var imageWidth = $(parentContainer).find("img").innerWidth();
       var imageCenter = imageWidth/2;
-      var centreOfCircleX = targetElement.position().left + (targetElement.width()/2);
+      var centreOfAnnotationX = targetElement.position().left + (targetElement.width()/2);
       
       // Remove any old elements from the container
       $(parentContainer).find(".overlay-under .under-text, .overlay-under .under-line").remove();
 
       // Set up the text area ready for styling
-      var textArea = $('<div></div>').html(targetConfiguration.content).addClass("under-text");
+      var textArea = $('<div></div>').html(targetConfig.content).addClass("under-text");
       var textAreaStyle;
 
       // Gap between the line and the start of the text; we don't want them right next to eachother
       var lineToTextPadding = 5;
 
-      if (centreOfCircleX > imageCenter) {
+      if (centreOfAnnotationX > imageCenter) {
 
         // Line on right of text
 
-        var textAreaWidthRight = (centreOfCircleX - lineToTextPadding + (this.lineWidth/2));
+        var textAreaWidthRight = (centreOfAnnotationX - lineToTextPadding + (targetConfig.lineWidth/2));
         textAreaStyle = "text-align: right; ";
-        textAreaStyle += "color: " + targetConfiguration.color + "; ";
+        textAreaStyle += "color: " + targetConfig.color + "; ";
         textAreaStyle += "width: " + textAreaWidthRight + "px; ";
         
       } else {
 
         // Line on left of text
 
-        var textAreaWidthLeft = (imageWidth - centreOfCircleX - lineToTextPadding - (this.lineWidth*1.5));
+        var textAreaWidthLeft = (imageWidth - centreOfAnnotationX - lineToTextPadding - (targetConfig.lineWidth*1.5));
         textAreaStyle = "text-align: left; ";
-        textAreaStyle += "color: " + targetConfiguration.color + "; ";
+        textAreaStyle += "color: " + targetConfig.color + "; ";
         textAreaStyle += "width: " + textAreaWidthLeft + "px; ";
-        textAreaStyle += "left: " + (centreOfCircleX + (this.lineWidth*1.5) + lineToTextPadding) + "px; ";
+        textAreaStyle += "left: " + (centreOfAnnotationX + (targetConfig.lineWidth*1.5) + lineToTextPadding) + "px; ";
 
       }
     
@@ -157,13 +146,14 @@ if (!window.annotate_tools) {
       // Calculate style for the simple vertical line
 
       var verticalLine = $('<div></div>').addClass("under-line");
-      var verticalLineTop = targetElement.position().top + targetElement.height() + this.lineWidth;
-      var verticalLineStyle = "background-color: " + targetConfiguration.color + "; ";
-      verticalLineStyle += "width: " + this.lineWidth + "px; ";
+      var verticalLineTop = targetElement.position().top + targetElement.height() + targetConfig.lineWidth;
+      var verticalLineStyle = "background-color: " + targetConfig.color + "; ";
+      verticalLineStyle += "width: " + targetConfig.lineWidth + "px; ";
       
-      // 1.4 is a magic number, I admit
-      verticalLineStyle += "height: " + (textArea.height() + (textArea.position().top - verticalLineTop) - (this.lineWidth*1.4)) + "px; ";
-      verticalLineStyle += "left: " + (centreOfCircleX + (this.lineWidth/2)) + "px; ";
+      // 4 = approx half a 1em line height; it is a magic number, I admit
+      console.log("Line width: ", targetConfig.lineWidth)
+      verticalLineStyle += "height: " + (textArea.height() + (textArea.position().top - verticalLineTop) - 4) + "px; ";
+      verticalLineStyle += "left: " + (centreOfAnnotationX + (targetConfig.lineWidth/2)) + "px; ";
       verticalLineStyle += "top: " + verticalLineTop + "px; ";
 
       // Draw the vertical line

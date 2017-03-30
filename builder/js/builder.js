@@ -1,6 +1,6 @@
 // GLOBAL MAGIC:
 
-var minCircleSize = 20;
+var minAnnotationDimensionSize = 20;
 var borderWidth = 3;
 
 var state = {
@@ -26,8 +26,8 @@ function configureTarget(index) {
   $("#content").val(current.content);
   $("#action-buttons").hide();
   $("#get-embed").hide();
-  $(".circle").removeClass("circle-editing");
-  $(".circle[data-index=" + index + "]").addClass("circle-editing");
+  $(".annotation-target").removeClass("annotation-target-editing");
+  $(".annotation-target[data-index=" + index + "]").addClass("annotation-target-editing");
 }
 
 function random_chars() {
@@ -52,11 +52,11 @@ function update_preview() {
       window.annotate_tools.install_text(o, target);
     }
     if (i == state.configuringATarget) {
-      $(".circle").last().addClass("circle-editing");
+      $(".annotation-target").last().addClass("annotation-target-editing");
     }
   })
   // add handles
-  $(".overlay-container .circle").each(function(i,o) {
+  $(".overlay-container .annotation-target").each(function(i,o) {
     $(o).append("<div class='resize_handle'></div>")
   });
   // do embed code
@@ -83,7 +83,7 @@ function handle_mousedown(e){
   if ($(e.target).hasClass("resize_handle")) {
     state.ptrTrack.handle = true;
     configureTarget($(e.target).parent().attr("data-index"));
-    if ($(this).outerWidth() == minCircleSize) {
+    if ($(this).outerWidth() == minAnnotationDimensionSize) {
       state.ptrTrack.origRadius = 0;
     } else {
       var perc = getPercs({
@@ -118,8 +118,8 @@ function handle_mousedown(e){
       });
       state.ptrTrack.extraSize = perc.x;
       var livesize = state.ptrTrack.origRadiusPx + size;
-      if (livesize < minCircleSize) {
-        livesize = minCircleSize
+      if (livesize < minAnnotationDimensionSize) {
+        livesize = minAnnotationDimensionSize
       }
       $(state.ptrTrack.elem).css({
         left: state.ptrTrack.origX - (livesize/2) + (state.ptrTrack.origRadiusPx/2),
@@ -149,7 +149,7 @@ function finaliseResize(elem) {
   var index = parseInt($(elem).attr("data-index"));
   var oldsize = parseFloat(state.targetConfiguration[index].radius);
   var minRendered = $("#live_preview img").innerWidth();
-  var minPerc = (minCircleSize/minRendered)*100;
+  var minPerc = (minAnnotationDimensionSize/minRendered)*100;
   if (oldsize < minPerc) {
     oldsize = minPerc;
   }
@@ -202,7 +202,7 @@ $(document).ready(function() {
 
   $("#commit-annotation").click(function() {
     state.configuringATarget = false;
-    $(".circle").removeClass("circle-editing");
+    $(".annotation-target").removeClass("annotation-target-editing");
     $("#configure-row").hide();
     $("#action-buttons").show();
   });
@@ -239,9 +239,9 @@ $(document).ready(function() {
 
   $("body").on("click", ".overlay-container", function(e) {
 
-    if ($(e.target).hasClass("circle")) {
+    if ($(e.target).hasClass("annotation-target")) {
 
-      // clicked on an annotation circle
+      // clicked on an annotation-target
       configureTarget(parseInt($(e.target).attr("data-index")));
 
     } else {
@@ -268,7 +268,7 @@ $(document).ready(function() {
 
   });
 
-  $("body").on("mousedown", ".overlay-container .circle", handle_mousedown);
+  $("body").on("mousedown", ".overlay-container .annotation-target", handle_mousedown);
 
   $("#generate-embed").click(function() {
     $("#action-buttons").hide();

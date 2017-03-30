@@ -18,7 +18,7 @@ body * {
 .sp-palette-container {
   max-width: 60px;
 }
-.overlay-container .circle {
+.overlay-container .annotation-target {
   cursor: move;
 }
 .resize_handle {
@@ -32,6 +32,6 @@ body * {
   right: -16px;
   cursor: nwse-resize;
 }
-.circle-editing {
+.annotation-target-editing {
   border-style: dotted !important;
 }

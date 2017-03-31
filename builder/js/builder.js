@@ -3,14 +3,16 @@
 // FIXME: THIS IS DEPENDENT ON THE STYLE USED, AND IS THROWING OFF DIMS.
 var minAnnotationDimensionSize = 25;
 var borderWidth = 3;
+var state = false;
 
-var state = {
+var defaultState = {
   H1: "Click here to add a hed",
   H2: "Click here to add a dek",
   lastUsedColour: 'rgba(234, 19, 148, 0.7)',
   lastUsedStyle: 'circle',
   configuringATarget: false,
   ptrTrack: false,
+  imageURL: '../img/calibration.png',
   sessionUnique: false,
   targetConfiguration: []
 }
@@ -35,9 +37,10 @@ function random_chars() {
 }
 
 function update_preview() {
+  
   state.sessionUnique = "annotation-" + random_chars();
   var data = {
-    "image": $("#image-url").val(),
+    "image": state.imageURL,
     "uniqueID": state.sessionUnique,
     "H1": state.H1,
     "H2": state.H2
@@ -45,10 +48,33 @@ function update_preview() {
   var tpl = $('#preview-template').html();
   var render = Mustache.render(tpl, data);
   $('#live_preview').html(render);
+
+  await_image_load();
+
+}
+
+function await_image_load() {
+
+  if ($("#live_preview img").height() > 50) {
+    
+    image_loaded();
+
+  } else {
+
+    setTimeout(function() {
+      console.info("Deferring render, target image found but isn't rendered yet");
+      await_image_load();
+    }, 66);
+
+  }
+
+}
+
+function image_loaded() {
   window.annotate_tools.initialise("#" + state.sessionUnique);
   $.each(state.targetConfiguration, function(i,o) {
     var target = window.annotate_tools.install_target(".overlay-container", o, i);
-    if (i == state.configuringATarget) {
+    if (i === state.configuringATarget) {
       $(".annotation-target").last().addClass("annotation-target-editing");
       if (o.content) {
         window.annotate_tools.install_text(o, target);
@@ -66,13 +92,26 @@ function update_preview() {
     "uniqueID": state.sessionUnique,
     "sc_open": "<scr" + "ipt",
     "sc_close": "</scr" + "ipt>",
-    "image": $("#image-url").val(),
+    "image": state.imageURL,
     "H1": state.H1,
     "H2": state.H2
   };
   var e_tpl = $('#full-embed-template').html();
   var render = Mustache.render(e_tpl, data);
+
+  // Update outputs, this may be better on the "Done" routine
   $('#embed-code').text(render);
+
+  var all_text = state.H1 + "\n" + state.H2 + "\n-- ";
+  $.each(state.targetConfiguration, function(i,o) {
+    all_text += "\n\nAnnotation " + i + ": \n";
+    if (o.content) {
+      all_text += o.content;
+    } else {
+      all_text += "No content."
+    }
+  });
+  $('#all-text').text(all_text);
 }
 
 
@@ -282,9 +321,81 @@ function getPercs(e) {
   return { x: xPos, y: yPos }
 }
 
+function start_editor() {
+  $("#action-buttons").show();
+  $("#starting-inputs").hide();
+  $("#image-preview").show();
+  // Prep color picker
+  $("#color").spectrum({
+    showPalette: true,
+    showButtons: false,
+    color: 'rgba(234, 19, 148, 0.7)',
+    palette: [
+        ['#eb352c', '#c9cacc', '#000000', '#feec34', '#3eb24b', '#2266dd', '#fd8224', '#43d0c1', '#f13792',
+        '#04129d', '#8e5411', '#7b3be8', '#7a0d75', '#1ca8fc', '#fd715e']
+    ],
+    showAlpha: true,
+    move: function(color) {
+      state.lastUsedColour = color.toRgbString();
+      $("#color").val(state.lastUsedColour);
+      $("#color").trigger("input");
+    }
+  });
+  update_preview();
+}
+
 // HOOKS
 
 $(document).ready(function() {
+
+  $("#image-ready").click(function() {
+    $("#reset").trigger("click");
+    state.imageURL = $("#image-url").val();
+    start_editor();
+  });
+
+  $("#textarea-ready").click(function() {
+
+    $("#reset").trigger("click");
+
+    var html = $("#embed-to-edit").val();
+
+    state.H1 = $(html).find('h1').html();
+    state.H2 = $(html).find('h2').html();
+    state.imageURL = $(html).find('img').attr("src");
+
+    var script_tags = $(html).find('script');
+    $.each(script_tags, function(i,o) {
+      var innertag = o.innerHTML;
+      innertag = innertag.trim();
+      // Find opening and closing JSON {}
+      var opening_brace = innertag.indexOf("{");
+      var closing_brace = innertag.lastIndexOf("}");
+      json_maybe = innertag.substring(opening_brace-1, closing_brace+1);
+      json_maybe = json_maybe.trim();
+      if (json_maybe.length > 0) {
+        state.targetConfiguration = JSON.parse(json_maybe).targets;
+      }
+    })
+
+    // Show editor area
+    start_editor();
+
+  });
+
+  $("#reset").on("click", function() {
+    state = false;
+    state = $.extend(true, {}, defaultState);
+    $("#get-embed").hide();
+    $("#action-buttons").hide();
+    $("#starting-inputs").show();
+    $("#image-preview").hide();
+  });
+
+  $("#continue").on("click", function() {
+    $("#get-embed").hide();
+    $("#action-buttons").show();
+  })
 
   $(".update-live").on("input", function() {
     if (state.configuringATarget !== false) {
@@ -292,7 +403,7 @@ $(document).ready(function() {
       var thing = $(this).attr("id");
       var conf = state.targetConfiguration[state.configuringATarget];
       
-      // On the fly conversion. FIXME: Not really scalable
+      // Rough on the fly conversion. FIXME: Not really scalable
       if (thing == "style") {
         state.lastUsedStyle = $(this).val();
         if (conf.style == "circle" && $(this).val() == "rect") {
@@ -326,29 +437,6 @@ $(document).ready(function() {
     update_preview();
     $("#configure-row").hide();
     $("#action-buttons").show();
-  });
-
-  $("#image-ready").click(function() {
-    $("#action-buttons").show();
-    $("#image-conf").hide();
-    $("#image-preview").show();
-    // Prep color picker
-    $("#color").spectrum({
-      showPalette: true,
-      showButtons: false,
-      color: 'rgba(234, 19, 148, 0.7)',
-      palette: [
-          ['#eb352c', '#c9cacc', '#000000', '#feec34', '#3eb24b', '#2266dd', '#fd8224', '#43d0c1', '#f13792',
-          '#04129d', '#8e5411', '#7b3be8', '#7a0d75', '#1ca8fc', '#fd715e']
-      ],
-      showAlpha: true,
-      move: function(color) {
-        state.lastUsedColour = color.toRgbString();
-        $("#color").val(state.lastUsedColour);
-        $("#color").trigger("input");
-      }
-    });
-    update_preview();
   });
 
   $("body").on("click", ".overlay-container", function(e) {

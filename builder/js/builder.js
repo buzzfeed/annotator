@@ -20,6 +20,7 @@ var defaultState = {
 ////// FUNCTIONS ////////
 
 function configureTarget(index) {
+  index = parseInt(index);
   var current = state.targetConfiguration[index];
   state.configuringATarget = index;
   $("#annoID").text(index);

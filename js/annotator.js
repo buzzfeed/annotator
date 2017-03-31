@@ -169,15 +169,15 @@ if (!window.annotate_tools) {
 
     var target = $(target);
 
+    // Set up the DIVs
+    var parentContainer = window.annotate_tools.initialise(target);
+
     // Wait for an image to both load and be sized correctly by the page before adding annotations.
 
     function goWhenReady() {
 
       if (target.height() > 50) {
         
-        // Set up the DIVs
-        var parentContainer = window.annotate_tools.initialise(target);
-
         // Install all the annotation targets
         window.annotate_tools.install_all_targets(config, parentContainer);
 

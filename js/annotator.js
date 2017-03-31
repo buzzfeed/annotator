@@ -22,7 +22,7 @@ if (!window.annotate_tools) {
 
   window.annotate_tools = {
 
-    "shapes": {},
+    "styles": {},
 
     "defaultLineWidth": 3, // px
 
@@ -53,10 +53,10 @@ if (!window.annotate_tools) {
       var inlineCSS;
 
       // If no style is stated, default to circle, as it got here first.
-      if (targetConfig.style && window.annotate_tools.shapes[targetConfig.style]) {
-        inlineCSS = window.annotate_tools.shapes[targetConfig.style].getStyle(imageWidth, imageHeight, targetConfig);
+      if (targetConfig.style && window.annotate_tools.styles[targetConfig.style]) {
+        inlineCSS = window.annotate_tools.styles[targetConfig.style].getStyle(imageWidth, imageHeight, targetConfig);
       } else {
-        inlineCSS = window.annotate_tools.shapes.circle.getStyle(imageWidth, imageHeight, targetConfig);
+        inlineCSS = window.annotate_tools.styles.circle.getStyle(imageWidth, imageHeight, targetConfig);
       }
 
       // Create the DIV, add the style and class

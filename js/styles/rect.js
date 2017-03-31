@@ -1,17 +1,19 @@
-if (!window.annotate_tools.shapes.rect) {
+if (!window.annotate_tools.styles.rect) {
   
-  window.annotate_tools.shapes.rect = {
+  window.annotate_tools.styles.rect = {
+
+    minTargetSize: 25,
+
     getStyle: function(imageWidth, imageHeight, targetConfig) {
 
-      var minTargetSize = 25; // px
       var annotationProperties = {};
 
       // Work out the radius. It's a percentage of the image width, but we don't want to make things untappably tiny on mobile.
       annotationProperties.width = ((imageWidth/100)*targetConfig.width);
       annotationProperties.height = ((imageHeight/100)*targetConfig.height);
       
-      if (annotationProperties.width < minTargetSize) { annotationProperties.width = minTargetSize; }
-      if (annotationProperties.height < minTargetSize) { annotationProperties.height = minTargetSize; }
+      if (annotationProperties.width < this.minTargetSize) { annotationProperties.width = this.minTargetSize; }
+      if (annotationProperties.height < this.minTargetSize) { annotationProperties.height = this.minTargetSize; }
 
       // The position, unadjusted for the size of the annotation. Will sit to the bottom right of the intended origin if left unadjusted.
       annotationProperties.y = (imageHeight/100) * targetConfig.y;

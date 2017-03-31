@@ -1,10 +1,6 @@
 // GLOBAL MAGIC:
 
-// FIXME: THIS IS DEPENDENT ON THE STYLE USED, AND IS THROWING OFF DIMS.
-var minAnnotationDimensionSize = 25;
-var borderWidth = 3;
 var state = false;
-
 var defaultState = {
   H1: "Click here to add a hed",
   H2: "Click here to add a dek",
@@ -20,16 +16,25 @@ var defaultState = {
 ////// FUNCTIONS ////////
 
 function configureTarget(index) {
+
+  index = parseInt(index);
+  
   var current = state.targetConfiguration[index];
+  
   state.configuringATarget = index;
+  state.currentConfig = current;
+  state.currentMinAnnotationDimensionSize = window.annotate_tools.styles[current.style].minTargetSize;
+
   $("#annoID").text(index);
   $("#configure-row").show();
   $("#content").val(current.content);
   $("#style").val(current.style);
+  $("#lineWidth").val(current.lineWidth);
   $("#action-buttons").hide();
   $("#get-embed").hide();
   $(".annotation-target").removeClass("annotation-target-editing");
   $(".annotation-target[data-index=" + index + "]").addClass("annotation-target-editing");
+
 }
 
 function random_chars() {
@@ -124,14 +129,14 @@ function handle_mousedown(e){
     state.ptrTrack.handle = true;
     configureTarget($(e.target).parent().attr("data-index"));
 
-    if ($(this).innerWidth() == minAnnotationDimensionSize) {
+    if ($(this).innerWidth() == state.currentMinAnnotationDimensionSize) {
       state.ptrTrack.origRadiusPixels = 0;
       state.ptrTrack.originalWidthPixels = 0;
       state.ptrTrack.originalHeightPixels = 0;
     } else {
       state.ptrTrack.origRadiusPixels = $(this).innerWidth();
-      state.ptrTrack.originalWidthPixels = $(this).innerWidth() + (borderWidth*2);
-      state.ptrTrack.originalHeightPixels = $(this).innerHeight() + (borderWidth*2);
+      state.ptrTrack.originalWidthPixels = $(this).innerWidth() + (state.currentConfig.lineWidth*2);
+      state.ptrTrack.originalHeightPixels = $(this).innerHeight() + (state.currentConfig.lineWidth*2);
     }
 
     state.ptrTrack.origX = $(this).position().left;
@@ -182,20 +187,20 @@ function handle_mousedown(e){
         var size = Math.max(newx, newy) * 2;
         
         var perc = getPercs({
-          offsetX: (size-(borderWidth*2))
+          offsetX: (size-(state.currentConfig.lineWidth*2))
         });
         
         state.ptrTrack.extraSize = perc.x;
         
         var livesize = parseFloat(state.ptrTrack.origRadiusPixels) + size;
 
-        if (livesize < minAnnotationDimensionSize) {
-          livesize = minAnnotationDimensionSize
+        if (livesize < state.currentMinAnnotationDimensionSize) {
+          livesize = state.currentMinAnnotationDimensionSize
         }
 
         $(state.ptrTrack.elem).css({
-          left: state.ptrTrack.origX - (livesize/2) + (state.ptrTrack.origRadiusPixels/2) + (borderWidth),
-          top: state.ptrTrack.origY - (livesize/2) + (state.ptrTrack.origRadiusPixels/2) + (borderWidth),
+          left: state.ptrTrack.origX - (livesize/2) + (state.ptrTrack.origRadiusPixels/2) + (state.currentConfig.lineWidth),
+          top: state.ptrTrack.origY - (livesize/2) + (state.ptrTrack.origRadiusPixels/2) + (state.currentConfig.lineWidth),
           width: livesize,
           height: livesize
         })
@@ -215,12 +220,12 @@ function handle_mousedown(e){
         var livesizeX = state.ptrTrack.originalWidthPixels + (newx*2);
         var livesizeY = state.ptrTrack.originalHeightPixels + (newy*2);
 
-        if (livesizeX < minAnnotationDimensionSize) {
-          livesizeX = minAnnotationDimensionSize
+        if (livesizeX < state.currentMinAnnotationDimensionSize) {
+          livesizeX = state.currentMinAnnotationDimensionSize
         }
 
-        if (livesizeY < minAnnotationDimensionSize) {
-          livesizeY = minAnnotationDimensionSize
+        if (livesizeY < state.currentMinAnnotationDimensionSize) {
+          livesizeY = state.currentMinAnnotationDimensionSize
         }
 
         $(state.ptrTrack.elem).css({
@@ -256,14 +261,13 @@ function finaliseResize(elem) {
   var conf = state.targetConfiguration[index];
   
   var iwPixels = $("#live_preview img").innerWidth();
-  var minPerc = (minAnnotationDimensionSize/iwPixels)*100;
+  var minPerc = (state.currentMinAnnotationDimensionSize/iwPixels)*100;
 
   if (typeof conf.radius !== "undefined") {
 
     // Radius finalisation
 
     var oldsize = parseFloat(conf.radius);
-    
     if (oldsize < minPerc) { oldsize = minPerc; }
 
     var newsize = oldsize + parseFloat(state.ptrTrack.extraSize);
@@ -278,8 +282,8 @@ function finaliseResize(elem) {
     var nw = $(elem).outerWidth();
     var nh = $(elem).outerHeight();
 
-    if (nw < minAnnotationDimensionSize) { nw = minAnnotationDimensionSize; }
-    if (nh < minAnnotationDimensionSize) { nh = minAnnotationDimensionSize; }
+    if (nw < state.currentMinAnnotationDimensionSize) { nw = state.currentMinAnnotationDimensionSize; }
+    if (nh < state.currentMinAnnotationDimensionSize) { nh = state.currentMinAnnotationDimensionSize; }
 
     var percs = getPercs({
       offsetX: nw,
@@ -306,8 +310,8 @@ function finalisePosition(elem) {
 function getPos(elem) {
   var relpos = $(elem).position();
   return getPercs({
-    offsetX: relpos.left + ($(elem).innerWidth()/2) + borderWidth,
-    offsetY: relpos.top + ($(elem).innerHeight()/2) + borderWidth
+    offsetX: relpos.left + ($(elem).innerWidth()/2) + state.currentConfig.lineWidth,
+    offsetY: relpos.top + ($(elem).innerHeight()/2) + state.currentConfig.lineWidth
   })
 }
 
@@ -403,7 +407,7 @@ $(document).ready(function() {
       var thing = $(this).attr("id");
       var conf = state.targetConfiguration[state.configuringATarget];
       
-      // Rough on the fly conversion. FIXME: Not really scalable
+      // Rough on the fly conversion
       if (thing == "style") {
         state.lastUsedStyle = $(this).val();
         if (conf.style == "circle" && $(this).val() == "rect") {
@@ -417,7 +421,11 @@ $(document).ready(function() {
         }
       }
 
-      conf[thing] = $(this).val();
+      if ($(this).hasClass("treat-as-number")) {
+        conf[thing] = parseFloat($(this).val());
+      } else {
+        conf[thing] = $(this).val();
+      }
 
       update_preview();
 

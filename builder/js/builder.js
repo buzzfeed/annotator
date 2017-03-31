@@ -268,7 +268,6 @@ function finaliseResize(elem) {
     // Radius finalisation
 
     var oldsize = parseFloat(conf.radius);
-    
     if (oldsize < minPerc) { oldsize = minPerc; }
 
     var newsize = oldsize + parseFloat(state.ptrTrack.extraSize);
@@ -422,7 +421,11 @@ $(document).ready(function() {
         }
       }
 
-      conf[thing] = $(this).val();
+      if ($(this).hasClass("treat-as-number")) {
+        conf[thing] = parseFloat($(this).val());
+      } else {
+        conf[thing] = $(this).val();
+      }
 
       update_preview();
 

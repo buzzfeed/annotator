@@ -1,3 +1,3 @@
 var builderConfig = {
-  distURL: "../dist/annotator.min.js"
+  distURL: "https://games.buzzfeed.com/_uk/annotator/dist/annotator.min.js"
 }

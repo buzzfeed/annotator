@@ -14,21 +14,21 @@ The builder is located at `./builder/index.html`.
 
 Please note: You will need to host `dist/annotator.min.js` yourself before putting an embed live. Read on for how to do that...
 
-### I wish to get annotator working for our organisation
+### I wish to get the annotator engine working for our organisation
 
 Get the latest version of yarn (0.21+): [https://yarnpkg.com/en/](https://yarnpkg.com/en/)
 
 Then just run `yarn` in the repository folder.
 
-This will grab the packages it needs, then use grunt to build the distributable engine. Once that's done, it'll watch for changes in `js/` and `sass/`, rebuilding when it sees them.
+This will grab the packages it needs, then use grunt to build the distributable engine. Once that's done, it'll watch for changes in `engine/`, rebuilding when it sees them.
 
-The two main files to modify are `js/annotator.js` and `sass/annotator.scss`. It will build to the single file `dist/annotator.min.js`, which you can then upload to your own infrastructure.
+The two main files to modify are `engine/js/annotator.js` and `engine/sass/annotator.scss`. It will build to the single file `dist/annotator.min.js`, which you can then upload to your own infrastructure.
 
 We would recommend at minimum changing the following to your requirements:
 
 * `builder/builder-config.js` to point to your distributable
-* `sass/annotator.sass` to meet your own styling requirements
-* `js/plugins/` to match your environment - analytics, image hosting, etc
+* `engine/sass/annotator.sass` to meet your own styling requirements
+* `engine/js/plugins/` to match your environment - analytics, image hosting, etc
 * We use the `<!-- UKNF -->` tag to mark our embeds as special in the BuzzFeed CMS. You probably won't need this tag, so feel free to remove it.
 
 Be aware: **annotator** will add the following to the global scope of your page.

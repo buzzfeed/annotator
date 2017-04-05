@@ -15,7 +15,7 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/build/annotator.css': 'sass/annotator.scss'
+          'dist/build/annotator.css': 'engine/sass/annotator.scss'
         }
       }
     },
@@ -51,8 +51,8 @@ module.exports = function(grunt) {
           'dist/build/annotator.js': [
             'node_modules/jquery/dist/jquery.min.js',
             'dist/build/style.js',
-            'js/annotator.js',
-            'js/*/*.js',
+            'engine/js/annotator.js',
+            'engine/js/*/*.js',
             'anon_end'
           ]
         }
@@ -75,7 +75,7 @@ module.exports = function(grunt) {
     clean: ['dist/build'],
     watch: {
       app: {
-        files: ['./sass/*.scss', './js/*.js', './js/*/*.js'],
+        files: ['./engine/*/*.js'],
         tasks: ['sass', 'cssmin', 'csstojs', 'concat', 'uglify', 'clean'],
       }
     }
@@ -88,7 +88,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadTasks('libs/grunt-csstojs/tasks');
+  grunt.loadTasks('grunt');
 
   grunt.registerTask('default', [
     'shell:yarnForjQuery', 

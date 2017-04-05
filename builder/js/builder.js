@@ -8,7 +8,7 @@ var defaultState = {
   lastUsedStyle: 'circle',
   configuringATarget: false,
   ptrTrack: false,
-  imageURL: '../img/calibration.png',
+  imageURL: './img/calibration.png',
   sessionUnique: false,
   targetConfiguration: []
 }
